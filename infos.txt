@@ -1,0 +1,11 @@
+256*144 pixels
+16 *9   sprites
+
+assets list : 
+https://rafagars.itch.io/gbgbc-assets
+https://benjaminno.itch.io/sweet-sounds-sfx-pack
+
+
+
+todo :
+- mettre en place une vérification de si le collider est "wall" dans les fonctions où ce n'est pas encore le cas
