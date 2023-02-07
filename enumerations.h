@@ -1,18 +1,19 @@
-#ifndef ENUMS_H
-#define ENUMS_H
+#ifndef ENUMERATIONS_H
+#define ENUMERATIONS_H
+
+#include <SDL2/SDL.h>
 
 enum window_parameters { 
     SPRITE_SIZE = 16, 
-    MINI_SPRITE_SIZE = 8,
+    TILE_SIZE = 8,
     NB_SPRITES_X = 16,
     NB_SPRITES_Y = 9,
-    NB_MINI_SPRITES_X = NB_SPRITES_X * 2,
-    NB_MINI_SPRITES_Y = NB_SPRITES_Y * 2,
+    NB_TILES_X = NB_SPRITES_X * 2,
+    NB_TILES_Y = NB_SPRITES_Y * 2,
     NATIVE_WIDTH = SPRITE_SIZE * NB_SPRITES_X, 
     NATIVE_HEIGHT = SPRITE_SIZE * NB_SPRITES_Y,
-    WIN_SCALE = 5,
-    TEXTURE_SHIFTSIZE_X = 4, //en sprites
-    TEXTURE_MINI_SHIFTSIZE_X = TEXTURE_SHIFTSIZE_X*2 //en mini sprites
+    WIN_SCALE = 4,
+    TEXTURE_TILES_SHIFTSIZE_X = 8 //en mini sprites
 };
 
 enum speeds {
@@ -73,18 +74,24 @@ enum character_type {
 };
 
 enum interobj_types {
+    IT_NONE,
+    IT_ENDWALL,
     IT_WALL,
-    IT_ENDWALL
+    IT_COIN,
+    IT_SANGLIER
 };
 
 extern const char CROUTE_PNG_FILENAME[];
+extern const char ASSETS_TILES_PNG[];
 extern const char AUDIO_FILE_JUMP[];
 extern const char AUDIO_FILE_HURT[];
 extern const char AUDIO_FILE_BUMP[];
+extern const char AUDIO_FILE_COIN[];
+extern const char LEVEL_1_FILENAME[];
 extern const float player_speed;
 extern const SDL_Rect RECT_NULL;
 extern const float gravity;
 extern const float jump_init_speed;
 
 
-#endif //ENUMS_H
+#endif //ENUMERATIONS_H

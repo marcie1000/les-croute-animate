@@ -2,18 +2,20 @@
 <CodeLite_Project Name="animate" Version="11000" InternalType="User templates">
   <VirtualDirectory Name="animate">
     <VirtualDirectory Name="sources">
+      <File Name="npc.c"/>
+      <File Name="pl_mouvements.c"/>
       <File Name="audio.c"/>
       <File Name="fx_switch_events.c"/>
       <File Name="sdl_init_and_quit.c"/>
       <File Name="textures_fx.c"/>
-      <File Name="mouvements.c"/>
       <File Name="fichiers.c"/>
     </VirtualDirectory>
     <VirtualDirectory Name="headers">
+      <File Name="npc.h"/>
+      <File Name="pl_mouvements.h"/>
       <File Name="audio.h"/>
       <File Name="textures_fx.h"/>
       <File Name="types_struct_defs.h"/>
-      <File Name="mouvements.h"/>
       <File Name="fichiers.h"/>
       <File Name="enumerations.h"/>
     </VirtualDirectory>
@@ -44,7 +46,7 @@
         <Library Value="SDL2_mixer"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(ProjectName)" IntermediateDirectory="" Command="$(WorkspacePath)/build-$(WorkspaceConfiguration)/bin/$(OutputFile)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="/home/adelia/Programmation/CodeLite/les_croute/animate" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <General OutputFile="$(ProjectName)" IntermediateDirectory="" Command="$(WorkspacePath)/build-$(WorkspaceConfiguration)/bin/$(OutputFile)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="/home/adelia/Programmation/CodeLite/les_croute/animate/assets" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
       <BuildSystem Name="CodeLite Makefile Generator"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>

@@ -9,7 +9,7 @@
 //project includes
 #include "types_struct_defs.h"
 
-extern int loadLevel(char*, int *, int *, int **, interobj **, int *);
+extern int loadLevel(const char*, int *, int *, int **, interobj **, int *);
 extern int lireLigne(FILE *, char*, int);
 extern int getLevelSize(char *, int *, int *);
 extern int getNbrFromChars(char *);

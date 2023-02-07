@@ -14,7 +14,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=Adelia
-Date                   :=03/02/23
+Date                   :=07/02/23
 CodeLitePath           :=/home/adelia/.codelite
 MakeDirCommand         :=mkdir -p
 LinkerName             :=/usr/bin/g++
@@ -62,7 +62,7 @@ AS       := /usr/bin/as
 ## User defined environment variables
 ##
 CodeLiteDir:=/usr/share/codelite
-Objects0=$(IntermediateDirectory)/mouvements.c$(ObjectSuffix) $(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) $(IntermediateDirectory)/sdl_init_and_quit.c$(ObjectSuffix) $(IntermediateDirectory)/fx_switch_events.c$(ObjectSuffix) $(IntermediateDirectory)/audio.c$(ObjectSuffix) $(IntermediateDirectory)/fichiers.c$(ObjectSuffix) $(IntermediateDirectory)/main.c$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/pl_mouvements.c$(ObjectSuffix) $(IntermediateDirectory)/fichiers.c$(ObjectSuffix) $(IntermediateDirectory)/npc.c$(ObjectSuffix) $(IntermediateDirectory)/audio.c$(ObjectSuffix) $(IntermediateDirectory)/main.c$(ObjectSuffix) $(IntermediateDirectory)/fx_switch_events.c$(ObjectSuffix) $(IntermediateDirectory)/sdl_init_and_quit.c$(ObjectSuffix) $(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) 
 
 
 
@@ -93,45 +93,13 @@ PreBuild:
 ##
 ## Objects
 ##
-$(IntermediateDirectory)/mouvements.c$(ObjectSuffix): mouvements.c $(IntermediateDirectory)/mouvements.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/mouvements.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/mouvements.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/mouvements.c$(DependSuffix): mouvements.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/mouvements.c$(ObjectSuffix) -MF$(IntermediateDirectory)/mouvements.c$(DependSuffix) -MM mouvements.c
+$(IntermediateDirectory)/pl_mouvements.c$(ObjectSuffix): pl_mouvements.c $(IntermediateDirectory)/pl_mouvements.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/pl_mouvements.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/pl_mouvements.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/pl_mouvements.c$(DependSuffix): pl_mouvements.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/pl_mouvements.c$(ObjectSuffix) -MF$(IntermediateDirectory)/pl_mouvements.c$(DependSuffix) -MM pl_mouvements.c
 
-$(IntermediateDirectory)/mouvements.c$(PreprocessSuffix): mouvements.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mouvements.c$(PreprocessSuffix) mouvements.c
-
-$(IntermediateDirectory)/textures_fx.c$(ObjectSuffix): textures_fx.c $(IntermediateDirectory)/textures_fx.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/textures_fx.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/textures_fx.c$(DependSuffix): textures_fx.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) -MF$(IntermediateDirectory)/textures_fx.c$(DependSuffix) -MM textures_fx.c
-
-$(IntermediateDirectory)/textures_fx.c$(PreprocessSuffix): textures_fx.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/textures_fx.c$(PreprocessSuffix) textures_fx.c
-
-$(IntermediateDirectory)/sdl_init_and_quit.c$(ObjectSuffix): sdl_init_and_quit.c $(IntermediateDirectory)/sdl_init_and_quit.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/sdl_init_and_quit.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/sdl_init_and_quit.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/sdl_init_and_quit.c$(DependSuffix): sdl_init_and_quit.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/sdl_init_and_quit.c$(ObjectSuffix) -MF$(IntermediateDirectory)/sdl_init_and_quit.c$(DependSuffix) -MM sdl_init_and_quit.c
-
-$(IntermediateDirectory)/sdl_init_and_quit.c$(PreprocessSuffix): sdl_init_and_quit.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/sdl_init_and_quit.c$(PreprocessSuffix) sdl_init_and_quit.c
-
-$(IntermediateDirectory)/fx_switch_events.c$(ObjectSuffix): fx_switch_events.c $(IntermediateDirectory)/fx_switch_events.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/fx_switch_events.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/fx_switch_events.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/fx_switch_events.c$(DependSuffix): fx_switch_events.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/fx_switch_events.c$(ObjectSuffix) -MF$(IntermediateDirectory)/fx_switch_events.c$(DependSuffix) -MM fx_switch_events.c
-
-$(IntermediateDirectory)/fx_switch_events.c$(PreprocessSuffix): fx_switch_events.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/fx_switch_events.c$(PreprocessSuffix) fx_switch_events.c
-
-$(IntermediateDirectory)/audio.c$(ObjectSuffix): audio.c $(IntermediateDirectory)/audio.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/audio.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/audio.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/audio.c$(DependSuffix): audio.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/audio.c$(ObjectSuffix) -MF$(IntermediateDirectory)/audio.c$(DependSuffix) -MM audio.c
-
-$(IntermediateDirectory)/audio.c$(PreprocessSuffix): audio.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/audio.c$(PreprocessSuffix) audio.c
+$(IntermediateDirectory)/pl_mouvements.c$(PreprocessSuffix): pl_mouvements.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/pl_mouvements.c$(PreprocessSuffix) pl_mouvements.c
 
 $(IntermediateDirectory)/fichiers.c$(ObjectSuffix): fichiers.c $(IntermediateDirectory)/fichiers.c$(DependSuffix)
 	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/fichiers.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/fichiers.c$(ObjectSuffix) $(IncludePath)
@@ -141,6 +109,22 @@ $(IntermediateDirectory)/fichiers.c$(DependSuffix): fichiers.c
 $(IntermediateDirectory)/fichiers.c$(PreprocessSuffix): fichiers.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/fichiers.c$(PreprocessSuffix) fichiers.c
 
+$(IntermediateDirectory)/npc.c$(ObjectSuffix): npc.c $(IntermediateDirectory)/npc.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/npc.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/npc.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/npc.c$(DependSuffix): npc.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/npc.c$(ObjectSuffix) -MF$(IntermediateDirectory)/npc.c$(DependSuffix) -MM npc.c
+
+$(IntermediateDirectory)/npc.c$(PreprocessSuffix): npc.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/npc.c$(PreprocessSuffix) npc.c
+
+$(IntermediateDirectory)/audio.c$(ObjectSuffix): audio.c $(IntermediateDirectory)/audio.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/audio.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/audio.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/audio.c$(DependSuffix): audio.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/audio.c$(ObjectSuffix) -MF$(IntermediateDirectory)/audio.c$(DependSuffix) -MM audio.c
+
+$(IntermediateDirectory)/audio.c$(PreprocessSuffix): audio.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/audio.c$(PreprocessSuffix) audio.c
+
 $(IntermediateDirectory)/main.c$(ObjectSuffix): main.c $(IntermediateDirectory)/main.c$(DependSuffix)
 	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/main.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/main.c$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/main.c$(DependSuffix): main.c
@@ -148,6 +132,30 @@ $(IntermediateDirectory)/main.c$(DependSuffix): main.c
 
 $(IntermediateDirectory)/main.c$(PreprocessSuffix): main.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/main.c$(PreprocessSuffix) main.c
+
+$(IntermediateDirectory)/fx_switch_events.c$(ObjectSuffix): fx_switch_events.c $(IntermediateDirectory)/fx_switch_events.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/fx_switch_events.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/fx_switch_events.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/fx_switch_events.c$(DependSuffix): fx_switch_events.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/fx_switch_events.c$(ObjectSuffix) -MF$(IntermediateDirectory)/fx_switch_events.c$(DependSuffix) -MM fx_switch_events.c
+
+$(IntermediateDirectory)/fx_switch_events.c$(PreprocessSuffix): fx_switch_events.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/fx_switch_events.c$(PreprocessSuffix) fx_switch_events.c
+
+$(IntermediateDirectory)/sdl_init_and_quit.c$(ObjectSuffix): sdl_init_and_quit.c $(IntermediateDirectory)/sdl_init_and_quit.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/sdl_init_and_quit.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/sdl_init_and_quit.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/sdl_init_and_quit.c$(DependSuffix): sdl_init_and_quit.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/sdl_init_and_quit.c$(ObjectSuffix) -MF$(IntermediateDirectory)/sdl_init_and_quit.c$(DependSuffix) -MM sdl_init_and_quit.c
+
+$(IntermediateDirectory)/sdl_init_and_quit.c$(PreprocessSuffix): sdl_init_and_quit.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/sdl_init_and_quit.c$(PreprocessSuffix) sdl_init_and_quit.c
+
+$(IntermediateDirectory)/textures_fx.c$(ObjectSuffix): textures_fx.c $(IntermediateDirectory)/textures_fx.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/textures_fx.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/textures_fx.c$(DependSuffix): textures_fx.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) -MF$(IntermediateDirectory)/textures_fx.c$(DependSuffix) -MM textures_fx.c
+
+$(IntermediateDirectory)/textures_fx.c$(PreprocessSuffix): textures_fx.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/textures_fx.c$(PreprocessSuffix) textures_fx.c
 
 
 -include $(IntermediateDirectory)/*$(DependSuffix)

@@ -4,11 +4,12 @@
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 
-#include "mouvements.h"
+#include "pl_mouvements.h"
 #include "enumerations.h"
 #include "types_struct_defs.h"
+//#include "textures_fx.h"
 
-void initPlayer(character *ch)
+void initPlayer(character *ch, bool initmoney)
 {
     ch->body_type = BODY_TYPE_DANIEL;
     
@@ -26,6 +27,8 @@ void initPlayer(character *ch)
     ch->jumping = false;
     ch->falling = false;
     ch->direction = REQ_DIR_DOWN;
+    if(initmoney)
+        ch->money = 0;
 }
 
 bool CheckPlayerOnTheGround(int nb_objs, interobj *objs, character *player)
@@ -44,15 +47,18 @@ bool CheckPlayerOnTheGround(int nb_objs, interobj *objs, character *player)
     //test de tous les colliders
     for(int i=0; i<nb_objs; i++)
     {
-        //si le collider est un wall
-        if( (objs[i].type == IT_WALL) || (objs[i].type == IT_ENDWALL) )
+        //si objet activé
+        if(objs[i].enabled)
         {
-            topB = objs[i].collider.y;
-            leftB = objs[i].collider.x;
-            rightB = objs[i].collider.x + objs[i].collider.w;
-            //si il y a collision sur l'axe x et que le joueur touche le haut du collider
-            if( (leftA < rightB) && (rightA > leftB) && (bottomA == topB) )
-                return true;
+            if((objs[i].type == IT_WALL) || (objs[i].type == IT_ENDWALL))
+            {
+                topB = objs[i].collider.y;
+                leftB = objs[i].collider.x;
+                rightB = objs[i].collider.x + objs[i].collider.w;
+                //si il y a collision sur l'axe x et que le joueur touche le haut du collider
+                if( (leftA < rightB) && (rightA > leftB) && (bottomA == topB) )
+                    return true;
+            }
         }
     }
     return false;
@@ -64,7 +70,7 @@ bool playerFall(int nb_objs, interobj *objs, character *player, int frame_fall, 
     //arrête le saut si on est sorti de l'écran
     if(player->position.y > NATIVE_HEIGHT)
     {
-        initPlayer(player);
+        initPlayer(player, false);
         return false;
     }
     bool on_the_ground = CheckPlayerOnTheGround(nb_objs, objs, player);
@@ -79,7 +85,7 @@ bool playerFall(int nb_objs, interobj *objs, character *player, int frame_fall, 
     }
     //recheck pour toutes les positions comprises dans [+1;+vitesse]
     int i=1;
-    while ( (i<=vitesse) && !on_the_ground )
+    while ( !on_the_ground && (i<=vitesse) )
     {
         player->position.y ++;
         player->collider.y ++;
@@ -146,19 +152,24 @@ bool checkCollisionX(SDL_Rect a, SDL_Rect b, int dir)
     topB = b.y;
     bottomB = b.y + b.h;
     
-    /*
-    * SI :
-    * 
-    * /                                                                              \
-    * | / bord gauche         le joueur   \     / bord droit           le joueur   \ |     /                       \
-    * | | du joueur      ET   regarde vers|  OU | du joueur      ET    regarde vers| |  ET | collision sur l'axe y |
-    * | | touche bord         la gauche   |     | touche bord          la droite   | |     \                       /
-    * | \ droit du mur                    /     \ gauche du mur                    / |
-    * \                                                                              /
-    * 
-    */
-    if( ( ( (leftA == rightB) && (dir == -1) ) || ( (rightA == leftB) && (dir == 1) ) ) && ( (bottomA >= topB) && (topA <= bottomB) ) )
-        return true;
+
+    //si collision sur l'axe y
+    if( (bottomA >= topB) && (topA <= bottomB) )
+    {
+        /*
+        * SI :
+        * 
+        * /                                                                              \
+        * | / bord gauche         le joueur   \     / bord droit           le joueur   \ |
+        * | | du joueur      ET   regarde vers|  OU | du joueur      ET    regarde vers| |
+        * | | touche bord         la gauche   |     | touche bord          la droite   | |
+        * | \ droit du mur                    /     \ gauche du mur                    / |
+        * \                                                                              /
+        * 
+        */
+        if( ( (leftA == rightB) && (dir == -1) ) || ( (rightA == leftB) && (dir == 1) ) )
+            return true;
+    }
     
     return false;
 }
@@ -182,20 +193,14 @@ bool checkCollisionEndwall(SDL_Rect a, SDL_Rect b)
     rightB = b.x + b.w;
     topB = b.y;
     bottomB = b.y + b.h;
-    
-    /*
-    * SI :
-    * 
-    * /                                                                              \
-    * | / bord gauche         le joueur   \     / bord droit           le joueur   \ |     /                       \
-    * | | du joueur      ET   regarde vers|  OU | du joueur      ET    regarde vers| |  ET | collision sur l'axe y |
-    * | | touche bord         la gauche   |     | touche bord          la droite   | |     \                       /
-    * | \ droit du mur                    /     \ gauche du mur                    / |
-    * \                                                                              /
-    * 
-    */
-    if( ( ( (leftA < rightB) /*&& (dir == -1)*/ ) && ( (rightA > leftB)/* && (dir == 1) */) ) && ( (bottomA >= topB) && (topA <= bottomB) ) )
-        return true;
+
+    //si collision sur l'axe y
+    if( (bottomA >= topB) && (topA <= bottomB) )
+    {
+        //si collision sur l'axe x 
+        if( (leftA < rightB) && (rightA > leftB) )
+            return true;
+    }
     
     return false;
 }
@@ -234,38 +239,41 @@ bool checkAllCollisions(SDL_Rect a, int nb_objs, interobj *objs, int req)
 
     for(int i=0; i<nb_objs; i++)
     {
-        switch(req)
+        if( (objs[i].enabled) && ( ( objs[i].type == IT_WALL) || (objs[i].type == IT_ENDWALL) ) )
         {
-            case REQ_DIR_LEFT:
-                dir = -1;
-                col = checkCollisionX(a, objs[i].collider, dir);
-                break;
-            case REQ_DIR_RIGHT:
-                dir = +1;
-                col = checkCollisionX(a, objs[i].collider, dir);
-                break;
-            case REQ_JUMP:
-                col = checkCollisionJump(a, objs[i].collider);
+            switch(req)
+            {
+                case REQ_DIR_LEFT:
+                    dir = -1;
+                    col = checkCollisionX(a, objs[i].collider, dir);
+                    break;
+                case REQ_DIR_RIGHT:
+                    dir = +1;
+                    col = checkCollisionX(a, objs[i].collider, dir);
+                    break;
+                case REQ_JUMP:
+                    col = checkCollisionJump(a, objs[i].collider);
+            }
+            if(col)
+                return true;
         }
-        if(col)
-            return true;
     }
     return false;
 }
 
 bool checkAllEndwallCollisions(SDL_Rect a, int nb_objs, interobj *objs, int cam_leftRight)
-//teste collision entre un rectangle a et tous les objets existants
-//le parametre req permmet de différencier les cas (mur sur l'axe x ou mur au dessus)
+//teste collision entre la camera et les bords du monde
 {
     bool col;
 
     for(int i=0; i<nb_objs; i++)
     {
-        if(objs[i].type != IT_ENDWALL)
-            continue;
-        col = checkCollisionEndwall(a, objs[i].collider);
-        if(col)
-            return true;
+        if(objs[i].type == IT_ENDWALL)
+        {
+            col = checkCollisionEndwall(a, objs[i].collider);
+            if(col)
+                return true;
+        }
     }
     return false;
 }
@@ -356,5 +364,33 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
     
     return !col;
     
+}
+
+bool checkCollisionSpecialEffect(int nb_objs, interobj **objs, character *player, int **level_tiles_grid, int nbtuilesX, int *type)
+{
+    bool col = false;
+    for(int i = 0; i<nb_objs; i++)
+    {
+        if( ( (*objs)[i].enabled ) && ( (*objs)[i].type == IT_COIN ) )
+            col = checkCollision(player->collider, (*objs)[i].collider);
+        if(col)
+        {
+            objCollisionSpecialEffects(i, objs, player, level_tiles_grid, nbtuilesX);
+            *type = IT_COIN;
+            return col;
+        }
+    }
+    return col;
+}
+
+void objCollisionSpecialEffects(int id_obj, interobj **objs, character *player, int **level_tiles_grid, int nbtuilesX)
+{
+    int posX = (*objs)[id_obj].position.x;
+    int posY = (*objs)[id_obj].position.y;
+    player->money++;
+    (*level_tiles_grid)[posY * nbtuilesX + posX] = 0;
+    (*objs)[id_obj].enabled = false;
+    
+    printf("player.money = %d\n", player->money);
 }
 

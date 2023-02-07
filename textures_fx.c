@@ -18,7 +18,7 @@ int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, SDL_Textu
         return status;
     }
     
-    *assets_tiles = IMG_LoadTexture(renderer, "GBC_assets_n_tiles.png");
+    *assets_tiles = IMG_LoadTexture(renderer, ASSETS_TILES_PNG);
     if(NULL == *assets_tiles)
     {
         fprintf(stderr, "erreur IMG_LoadTexture() assets_tiles : %s\n", IMG_GetError());
@@ -97,40 +97,51 @@ int loadPlayerSprite(SDL_Renderer *renderer, SDL_Texture *croute_texture,
     return status;
 }
 
-SDL_Texture *loadLevelSprites(SDL_Texture *assets_tiles, int *level_tiles_grid, 
+int initLevelTextures(SDL_Texture **level_main, SDL_Renderer *renderer, int nb_tuiles_x, int nb_tuiles_y)
+{
+    int largeur_texture = nb_tuiles_x*TILE_SIZE;
+    *level_main = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 
+                                    largeur_texture, nb_tuiles_y * TILE_SIZE);
+    if(NULL == *level_main)
+    {
+        fprintf(stderr, "erreur SDL_CreateTexture level_main : %s\n", SDL_GetError());
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
+
+int loadLevelSprites(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *level_tiles_grid, 
                               int nb_tuiles_x, int nb_tuiles_y, SDL_Renderer *renderer)
 {
-    SDL_Texture *tex = NULL;
     SDL_Rect source;
-    int largeur_texture = nb_tuiles_x*MINI_SPRITE_SIZE;/*NATIVE_WIDTH + TEXTURE_SHIFTSIZE_X*SPRITE_SIZE;*/
     //TEXTURE_SHIFTSIZE_X sert à créer l'espace nécesssaire à la mise à jour de la texture hors écran
     //pour le scrolling
-    tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 
-                            largeur_texture, nb_tuiles_y * MINI_SPRITE_SIZE);
-    SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
-    if(NULL == tex)
+    SDL_SetTextureBlendMode(*dest_text, SDL_BLENDMODE_BLEND);
+    if(NULL == *dest_text)
     {
         fprintf(stderr, "erreur SDL_CreateTexture in function loadLevelSprites : %s\n", SDL_GetError());
-        return tex;
+        return EXIT_FAILURE;
     }
-    SDL_SetRenderTarget(renderer, tex);
+    SDL_SetRenderTarget(renderer, *dest_text);
+    SDL_SetRenderDrawColor(renderer, 0,0,0,0);
+    SDL_RenderClear(renderer);
     
     for(int i=0; i<nb_tuiles_y; i++)
     {
-        for(int j=0; j<(nb_tuiles_x/*NB_MINI_SPRITES_X + TEXTURE_MINI_SHIFTSIZE_X*/); j++)
+        for(int j=0; j<(nb_tuiles_x/*NB_TILES_X + TEXTURE_TILES_SHIFTSIZE_X*/); j++)
         {
             if( 0 != level_tiles_grid[i * nb_tuiles_x + j] )
             {
                 if( 0!= selectLvlAssetsSprite(level_tiles_grid[i * nb_tuiles_x + j], &source) )
-                    return tex;
-                if (0 != copieTextureSurRender(renderer, assets_tiles, j * MINI_SPRITE_SIZE, 
-                    i * MINI_SPRITE_SIZE, source, SDL_FLIP_NONE, 1))
-                    return tex;
+                    return EXIT_FAILURE;
+                if (0 != copieTextureSurRender(renderer, assets_tiles, j * TILE_SIZE, 
+                    i * TILE_SIZE, source, SDL_FLIP_NONE, 1))
+                    return EXIT_FAILURE;
             }
         }
     }
     SDL_SetRenderTarget(renderer, NULL);
-    return tex;
+    return EXIT_SUCCESS;
 }
 
 int selectLvlAssetsSprite(int sprite_ID, SDL_Rect *source)
@@ -150,10 +161,10 @@ int selectLvlAssetsSprite(int sprite_ID, SDL_Rect *source)
         ligne--;
         colonne = 7;
     }    
-    source->x = colonne*MINI_SPRITE_SIZE;
-    source->y = ligne*MINI_SPRITE_SIZE;
-    source->w = MINI_SPRITE_SIZE;
-    source->h = MINI_SPRITE_SIZE;
+    source->x = colonne*TILE_SIZE;
+    source->y = ligne*TILE_SIZE;
+    source->w = TILE_SIZE;
+    source->h = TILE_SIZE;
     
     status = EXIT_SUCCESS;
     return status;

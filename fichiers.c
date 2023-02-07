@@ -160,10 +160,15 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
             return status;
         }
         sous_chaine = strtok(NULL, ",");
+        
         if (NULL != strstr(sous_chaine, "endwall"))
             (*objs)[i].type = IT_ENDWALL;
         else if (NULL != strstr(sous_chaine, "wall"))
             (*objs)[i].type = IT_WALL;
+        else if (NULL != strstr(sous_chaine, "coin"))
+            (*objs)[i].type = IT_COIN;
+        else if (NULL != strstr(sous_chaine, "sanglier"))
+            (*objs)[i].type = IT_SANGLIER;
         else
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : type=,[???]\n", i);
@@ -186,7 +191,7 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : position.x=[???]\n", i);
             return status;
         }
-        (*objs)[i].position.x = MINI_SPRITE_SIZE * getNbrFromChars(sous_chaine);
+        (*objs)[i].position.x = getNbrFromChars(sous_chaine);
         //position y
         sous_chaine = strtok(NULL, ",");
         if (NULL == sous_chaine)
@@ -194,7 +199,7 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : position.y=[???]\n", i);
             return status;
         }
-        (*objs)[i].position.y = MINI_SPRITE_SIZE * getNbrFromChars(sous_chaine);
+        (*objs)[i].position.y = getNbrFromChars(sous_chaine);
         
         //==============
         //collider=
@@ -211,7 +216,7 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider.x=[???]\n", i);
             return status;
         }
-        (*objs)[i].collider.x = MINI_SPRITE_SIZE * getNbrFromChars(sous_chaine);
+        (*objs)[i].collider.x = TILE_SIZE * getNbrFromChars(sous_chaine);
         //collider y
         sous_chaine = strtok(NULL, ",");
         if (NULL == sous_chaine)
@@ -219,7 +224,7 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider.y=[???]\n", i);
             return status;
         }
-        (*objs)[i].collider.y = MINI_SPRITE_SIZE * getNbrFromChars(sous_chaine);
+        (*objs)[i].collider.y = TILE_SIZE * getNbrFromChars(sous_chaine);
         //collider w
         sous_chaine = strtok(NULL, ",");
         if (NULL == sous_chaine)
@@ -227,7 +232,7 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider.w=[???]\n", i);
             return status;
         }
-        (*objs)[i].collider.w = MINI_SPRITE_SIZE * getNbrFromChars(sous_chaine);
+        (*objs)[i].collider.w = TILE_SIZE * getNbrFromChars(sous_chaine);
         //collider h
         sous_chaine = strtok(NULL, ",");
         if (NULL == sous_chaine)
@@ -235,7 +240,7 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider.h=[???]\n", i);
             return status;
         }
-        (*objs)[i].collider.h = MINI_SPRITE_SIZE * getNbrFromChars(sous_chaine);
+        (*objs)[i].collider.h = TILE_SIZE * getNbrFromChars(sous_chaine);
         
         //==============
         //pdv=
@@ -260,22 +265,22 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
         //==============
         //sprite_id=
         sous_chaine = strtok(NULL, ",");
-        if (NULL == strstr(sous_chaine, "sprite_id=")) 
+        if (NULL == strstr(sous_chaine, "enabled=")) 
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : sprite_id=\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : enabled=\n", i);
             return status;
         }
         //value
         sous_chaine = strtok(NULL, ",");
         if (NULL == sous_chaine)
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : sprite_id=[???]\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : enabled=[???]\n", i);
             return status;
         }
-        if (NULL != strstr(sous_chaine, "none")) 
-            (*objs)[i].sprite_id = 0;
+        if (NULL != strstr(sous_chaine, "1")) 
+            (*objs)[i].enabled = true;
         else
-            (*objs)[i].sprite_id = getNbrFromChars(sous_chaine);
+            (*objs)[i].enabled = false;
 
     }    
     
@@ -283,7 +288,7 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
     return status;
 }
 
-int loadLevel(char* level_filename, int *taille_x, int *taille_y, int **level_tiles_grid, 
+int loadLevel(const char* level_filename, int *taille_x, int *taille_y, int **level_tiles_grid, 
               interobj **objs, int *nb_objs)
 //fonction principale pour le chargement d'un fichier niveau .csv
 {

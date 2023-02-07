@@ -5,7 +5,7 @@
 #include "audio.h"
 #include "enumerations.h"
 
-int loadAudio(Mix_Chunk **jump, Mix_Chunk **hurt, Mix_Chunk **bump)
+int loadAudio(Mix_Chunk **jump, Mix_Chunk **hurt, Mix_Chunk **bump, Mix_Chunk **coin)
 {
     int status = EXIT_SUCCESS;
     *jump = Mix_LoadWAV(AUDIO_FILE_JUMP);
@@ -26,6 +26,13 @@ int loadAudio(Mix_Chunk **jump, Mix_Chunk **hurt, Mix_Chunk **bump)
     if (NULL == hurt)
     {
         fprintf(stderr, "erreur Mix_LoadWAV(%s) : %s\n", AUDIO_FILE_BUMP, Mix_GetError());
+        status = EXIT_FAILURE;
+    }
+    
+    *coin = Mix_LoadWAV(AUDIO_FILE_COIN);
+    if (NULL == coin)
+    {
+        fprintf(stderr, "erreur Mix_LoadWAV(%s) : %s\n", AUDIO_FILE_COIN, Mix_GetError());
         status = EXIT_FAILURE;
     }
     return status;

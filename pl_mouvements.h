@@ -17,6 +17,9 @@ extern bool checkCollisionEndwall(SDL_Rect, SDL_Rect);
 extern bool updatePositionJump(int , interobj *, character *, int, bool*);
 extern bool updatePositionWalk(int, interobj *, character *, int, int);
 extern int updatePositionCam(int, interobj *, cam *, int);
-extern void initPlayer(character *);
+extern void initPlayer(character *, bool);
+extern void objCollisionSpecialEffects(int, interobj **, character *, int **, int);
+extern bool checkCollisionSpecialEffect(int, interobj **, character *, int **, int, int*);
+
 
 #endif //MOUVEMENTS_H

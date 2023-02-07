@@ -9,7 +9,7 @@ typedef struct interobject_struct { //objets pouvant interragir avec le joueur
     SDL_Point position;
     SDL_Rect collider;
     int pdv; //points de vie
-    int sprite_id; //la texture associée
+    bool enabled; //l'objet est-il activé
 }interobj;
 
 typedef struct flpoint_struct {
@@ -27,6 +27,7 @@ typedef struct character_struct { //pour tout ce qui bouge : joueur, NPC
     bool jumping;
     bool falling;
     int direction;
+    int money;
 }character;
 
 typedef struct character_struct character;
