@@ -96,8 +96,8 @@ int main(int argc, char *argv[])
     int *level_tiles_grid = malloc(sizeof(int[10][10]));
     character *npcs = malloc(sizeof(character));
     interobj *objs = malloc(sizeof(interobj));
-    int nb_tuiles_x, nb_tuiles_y, nb_objs;
-    if ( 0 != loadLevel(LEVEL_1_FILENAME, &nb_tuiles_x, &nb_tuiles_y, &level_tiles_grid, &objs, &nb_objs) )
+    int nb_tuiles_x, nb_tuiles_y, nb_objs, nb_npcs;
+    if ( 0 != loadLevel(LEVEL_1_FILENAME, &nb_tuiles_x, &nb_tuiles_y, &level_tiles_grid, &objs, &nb_objs, &npcs, &nb_npcs) )
         goto Quitter;
 
     initLevelTextures(&level_main, main_renderer, nb_tuiles_x, nb_tuiles_y);

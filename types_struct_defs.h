@@ -20,17 +20,10 @@ typedef struct interobject_struct { //objets pouvant interragir avec le joueur
 
 typedef struct character_struct { //pour tout ce qui bouge : joueur, NPC
     interobj obj;
-
-    //int type;
-    //flpoint position;
-    //SDL_Rect collider;
-    //int pdv;
     int puissance;
     bool walking;
     bool jumping;
     bool falling;
-    //bool enabled;
-    //int direction;
     int money;
 }character;
 

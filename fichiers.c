@@ -276,7 +276,7 @@ int objArrayFill(FILE *level_file, char *buf, int buf_len, interobj **objs, int 
 
 }
 
-int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *nb_objs)
+int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *nb_objs, character **npcs, int *nb_npcs)
 {
     int status = EXIT_FAILURE;
     
@@ -297,10 +297,6 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
     }
     *nb_objs = getNbrFromChars(sous_chaine);
     
-    //arrête la fonction ici si il n'y a pas d'interobjects
-    if(*nb_objs == 0)
-        return EXIT_SUCCESS;
-    
     //Réallocation du tableau objs maintenant que l'on connait le nombre d'interobjects
     interobj *tmp = realloc( *objs, sizeof(interobj) * (*nb_objs) );
     if (NULL == tmp)
@@ -309,16 +305,76 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
         return status;
     }
     *objs = tmp;
+    //remplissage
+    if (0 != objArrayFill(level_file, buf, buf_len, objs, *nb_objs))
+        return status;
     
-    objArrayFill(level_file, buf, buf_len, objs, *nb_objs);
+    //lecture du nb de NPCS
+    lireLigne(level_file, buf, buf_len);
+    if(NULL == strstr(buf, "npcs=,"))
+    {
+        fprintf(stderr, "Fichier corrompu (npcs=).\n");
+        return status;
+    }
+    sous_chaine = strtok(buf, ",");
+    sous_chaine = strtok(NULL, ",");    
+    if(NULL == sous_chaine)
+    {
+        fprintf(stderr, "Fichier corrompu ( npcs=[aucune valeur] ).\n");
+        return status;
+    }
+    *nb_npcs = getNbrFromChars(sous_chaine);
     
+    //arrête la fonction ici si il n'y a pas de npcs
+    if(*nb_npcs == 0)
+        return EXIT_SUCCESS;
+    else if(*nb_npcs > 1)
+    {
+        //Réallocation du tableau npcs maintenant que l'on connait le nombre d'interobjects
+        character *tmp2 = realloc( *npcs, sizeof(character) * (*nb_npcs) );
+        if (NULL == tmp2)
+        {
+            fprintf(stderr, "erreur realloc npcs\n");
+            return status;
+        }
+        *npcs = tmp2;
+    }
     
+    //tableau temporaire
+    interobj *npc_objs_tmp = malloc(sizeof(interobj) * (*nb_npcs));
+    //remplissage
+    if (0 != objArrayFill(level_file, buf, buf_len, &npc_objs_tmp, *nb_npcs))
+    {
+        free(npc_objs_tmp);
+        return status;
+    }
+    for(int i=0; i<(*nb_npcs); i++)
+    {
+        (*npcs)[i].obj.type = npc_objs_tmp[i].type;
+        
+        (*npcs)[i].obj.position.x = npc_objs_tmp[i].position.x;
+        (*npcs)[i].obj.position.y = npc_objs_tmp[i].position.y;
+        
+        (*npcs)[i].obj.collider.x = npc_objs_tmp[i].collider.x;
+        (*npcs)[i].obj.collider.y = npc_objs_tmp[i].collider.y;
+        (*npcs)[i].obj.collider.w = npc_objs_tmp[i].collider.w;
+        (*npcs)[i].obj.collider.h = npc_objs_tmp[i].collider.h;
+        
+        (*npcs)[i].obj.pdv = npc_objs_tmp[i].pdv;
+        
+        (*npcs)[i].obj.direction = npc_objs_tmp[i].direction;
+        
+        (*npcs)[i].obj.enabled = npc_objs_tmp[i].enabled;
+
+    }
+    
+    free(npc_objs_tmp);
     status = EXIT_SUCCESS;
     return status;
 }
 
 int loadLevel(const char* level_filename, int *taille_x, int *taille_y, int **level_tiles_grid, 
-              interobj **objs, int *nb_objs)
+              interobj **objs, int *nb_objs, character **npcs, int *nb_npcs)
 //fonction principale pour le chargement d'un fichier niveau .csv
 {
     int status = EXIT_FAILURE;
@@ -411,7 +467,7 @@ int loadLevel(const char* level_filename, int *taille_x, int *taille_y, int **le
     }
     
     //lecture des interobjects
-    if ( 0 != objReading(level_file, buf, buf_len, objs, nb_objs) )
+    if ( 0 != objReading(level_file, buf, buf_len, objs, nb_objs, npcs, nb_npcs) )
     {
         free(buf);
         return status;
