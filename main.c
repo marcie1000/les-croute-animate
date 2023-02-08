@@ -75,10 +75,10 @@ int main(int argc, char *argv[])
     SDL_Event e;
     int requete = REQ_NONE;
     //current animation walking and jumping frame
-    int frame_walking = 0;
-    int frame_jump = 0;
-    int frame_fall = 0;
-    int frame_npc = 0;
+//    int frame_walking = 0;
+//    int frame_jump = 0;
+//    int frame_fall = 0;
+//    int frame_npc = 0;
     //int frame_camMov = 0;
     //mouvement du personnage flag
     bool jump_ended = true; //fin d'appui sur touche jump
@@ -99,9 +99,9 @@ int main(int argc, char *argv[])
     int nb_tuiles_x, nb_tuiles_y, nb_objs, nb_npcs;
     if ( 0 != loadLevel(LEVEL_1_FILENAME, &nb_tuiles_x, &nb_tuiles_y, &level_tiles_grid, &objs, &nb_objs, &npcs, &nb_npcs) )
         goto Quitter;
-
+    initNPCs(&npcs, nb_npcs);
     initLevelTextures(&level_main, main_renderer, nb_tuiles_x, nb_tuiles_y);
-    loadLevelSprites(&level_main, assets_tiles, level_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer);
+    loadLevelTiles(&level_main, assets_tiles, level_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer);
     
     
 
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
         }
 
         //commence le saut
-        if(requete == REQ_JUMP && jump_ended && (frame_jump == 0) && !player.falling)
+        if(requete == REQ_JUMP && jump_ended && (player.frame_jump == 0) && !player.falling)
         {
             jump_ended = false;
             player.jumping = true;
@@ -146,38 +146,91 @@ int main(int argc, char *argv[])
         SDL_SetRenderDrawColor(main_renderer, 255,183,128,255);
         SDL_RenderClear(main_renderer);
         
-        //ACTUALISATIONS POSITION PERSONNAGE
+        //ACTUALISATIONS POSITION NPCS ==============================
+        for(int i=0; i<nb_npcs; i++)
+        {
+            //ne fait rien si le npc est désactivé
+            if(!npcs[i].obj.enabled)
+                continue;
+            if(npcs[i].jumping)
+            {
+                //change la position du personnage et renvoie true jusqu'à la fin du saut
+                npcs[i].jumping = updatePositionJump(nb_objs, objs, &npcs[i], npcs[i].frame_jump, &hurt_soundflag);
+                //next frame jump
+                npcs[i].frame_jump++;
+            }
+            else
+            {
+                npcs[i].falling = playerFall(nb_objs, objs, &npcs[i], npcs[i].frame_fall, &bump_soundflag);
+                if(npcs[i].falling)
+                {
+                    npcs[i].frame_jump = 0;
+                    npcs[i].frame_fall++;
+                }
+                else
+                    npcs[i].frame_fall=0;
+            }
+            bool npc_moved;
+            if(npcs[i].walking)
+            {
+                int npc_left_right;
+                if (npcs[i].obj.direction == REQ_DIR_LEFT)
+                    npc_left_right = -1;
+                else
+                    npc_left_right = +1;
+                //change la position du personnage si on marche
+                npc_moved = updatePositionWalk(nb_objs, objs, &npcs[i], up_down, npc_left_right);
+                //go to next npcs[i].frame_walk
+                npcs[i].frame_walk++;
+                //inverse la direction si mur rencontré
+                if(!npc_moved)
+                {
+                    if (npcs[i].obj.direction == REQ_DIR_LEFT)
+                        npcs[i].obj.direction = REQ_DIR_RIGHT;
+                    else
+                        npcs[i].obj.direction = REQ_DIR_LEFT;
+                }
+            }
+            
+            if((npcs[i].frame_walk/NPC_ANIM_FRAME_LENGHT) >= NPC_ANIMATION_FRAMES)
+                npcs[i].frame_walk = 0;
+            if(!npcs[i].jumping)
+                npcs[i].frame_jump = 0;
+        }
+        
+        //ACTUALISATIONS POSITION PERSONNAGE ================================================
         if(player.jumping)
         {
             //change la position du personnage et renvoie true jusqu'à la fin du saut
-            player.jumping = updatePositionJump(nb_objs, objs, &player, frame_jump, &hurt_soundflag);
+            player.jumping = updatePositionJump(nb_objs, objs, &player, player.frame_jump, &hurt_soundflag);
             //next frame jump
-            frame_jump++;
+            player.frame_jump++;
         }
         else
         {
-            player.falling = playerFall(nb_objs, objs, &player, frame_fall, &bump_soundflag);
+            player.falling = playerFall(nb_objs, objs, &player, player.frame_fall, &bump_soundflag);
             if(player.falling)
             {
-                frame_jump = 0;
-                frame_fall++;
+                player.frame_jump = 0;
+                player.frame_fall++;
             }
             else
-                frame_fall=0;
+                player.frame_fall=0;
         }
         bool player_moved = false;
         if(player.walking)
         {
             //change la position du personnage si on marche
             player_moved = updatePositionWalk(nb_objs, objs, &player, up_down, left_right);
-            //go to next frame_walking
-            frame_walking++;
+            player.obj.collider.x = player.obj.position.x + PLAYER_COL_SHIFT;
+            //go to next player.frame_walk
+            player.frame_walk++;
         }
         
         //RECHERCHE D'ÉVÉNEMENTS LIÉS À LA RENCONTRE D'OBJETS SPÉCIAUX
         if(checkCollisionSpecialEffect(nb_objs, &objs, &player, &level_tiles_grid, nb_tuiles_x, &obj_type))
         {
-            loadLevelSprites(&level_main, assets_tiles, level_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer);
+            loadLevelTiles(&level_main, assets_tiles, level_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer);
             Mix_PlayChannel(-1, coin, 0);
         }
         
@@ -224,23 +277,34 @@ int main(int argc, char *argv[])
         }
         
         
-        //donne le bon identifiant de sprite en fonction des 3 paramètres
-        spriteID = chosePlayerSprite(player.obj.direction, player.walking, player.obj.type, frame_walking/8, &flip);
+        
+        //RENDER======================
         //render level
         SDL_SetRenderTarget(main_renderer, NULL);
         copieTextureSurRender(main_renderer, level_main, 0, 0, camera.texLoadSrc, SDL_FLIP_NONE, WIN_SCALE);
+
+        //affichage des npcs
+        for(int i=0; i<nb_npcs; i++)
+        {
+            if(npcs[i].obj.enabled)
+            {
+                spriteID = choseNPCSprite(npcs[i].obj.direction, npcs[i].walking, npcs[i].frame_walk/NPC_ANIM_FRAME_LENGHT, &flip);
+                loadNPCSprite(main_renderer, npc_texture, npcs[i].obj.position.x-camera.texLoadSrc.x, npcs[i].obj.position.y, spriteID, flip);        
+            }
+        }
+        
+        //donne le bon identifiant de sprite en fonction des 3 paramètres
+        spriteID = chosePlayerSprite(player.obj.direction, player.walking, player.obj.type, player.frame_walk/DEFAULT_ANIM_FRAMES, &flip);
         //charge la texture du perso dans le renderer
         loadPlayerSprite(main_renderer, croute_texture, player.obj.position.x-camera.texLoadSrc.x, player.obj.position.y, spriteID, flip);        
         //update screen
         SDL_RenderPresent(main_renderer);
 
         //cycle animation
-        if((frame_walking/8) >= WALKING_ANIMATION_FRAMES)
-            frame_walking = 0;
-        if((frame_npc/8) >= NPC_ANIMATION_FRAMES)
-            frame_npc = 0;
+        if((player.frame_walk/DEFAULT_ANIM_FRAMES) >= WALKING_ANIMATION_FRAMES)
+            player.frame_walk = 0;
         if(!player.jumping)
-            frame_jump = 0;
+            player.frame_jump = 0;
     }
 
     status = EXIT_SUCCESS;

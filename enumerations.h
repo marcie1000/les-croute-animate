@@ -12,11 +12,13 @@ enum window_parameters {
     NB_TILES_Y = NB_SPRITES_Y * 2,
     NATIVE_WIDTH = SPRITE_SIZE * NB_SPRITES_X, 
     NATIVE_HEIGHT = SPRITE_SIZE * NB_SPRITES_Y,
-    WIN_SCALE = 4,
+    WIN_SCALE = 6,
     TEXTURE_TILES_SHIFTSIZE_X = 8 //en mini sprites
 };
 
 enum speeds {
+    DEFAULT_ANIM_FRAMES = 8,
+    NPC_ANIM_FRAME_LENGHT = 4,
     WALKING_ANIMATION_FRAMES = 2,
     NPC_ANIMATION_FRAMES = 4
 };

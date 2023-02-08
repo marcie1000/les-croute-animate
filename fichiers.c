@@ -148,6 +148,7 @@ int objArrayFill(FILE *level_file, char *buf, int buf_len, interobj **objs, int 
         
         //==============
         //position=
+        //position en TUILES et non en PIXELS
         sous_chaine = strtok(NULL, ",");
         if (NULL == strstr(sous_chaine, "position=")) 
         {
@@ -173,6 +174,7 @@ int objArrayFill(FILE *level_file, char *buf, int buf_len, interobj **objs, int 
         
         //==============
         //collider=
+        //collider en PIXELS
         sous_chaine = strtok(NULL, ",");
         if (NULL == strstr(sous_chaine, "collider=")) 
         {

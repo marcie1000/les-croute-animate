@@ -26,6 +26,9 @@ void initPlayer(character *ch, bool initmoney)
     ch->walking = false;
     ch->jumping = false;
     ch->falling = false;
+    ch->frame_walk = 0;
+    ch->frame_jump = 0;
+    ch->frame_fall = 0;
     ch->obj.direction = REQ_DIR_DOWN;
     ch->obj.enabled = true;
     if(initmoney)
@@ -361,7 +364,7 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
         coll_tmp.x = player->obj.position.x + deplacement;
     
     player->obj.position.x = pos_tmp.x;
-    player->obj.collider.x = coll_tmp.x + PLAYER_COL_SHIFT;
+    player->obj.collider.x = coll_tmp.x;
     
     return !col;
     

@@ -119,7 +119,7 @@ int initLevelTextures(SDL_Texture **level_main, SDL_Renderer *renderer, int nb_t
     return EXIT_SUCCESS;
 }
 
-int loadLevelSprites(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *level_tiles_grid, 
+int loadLevelTiles(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *level_tiles_grid, 
                               int nb_tuiles_x, int nb_tuiles_y, SDL_Renderer *renderer)
 {
     SDL_Rect source;
@@ -128,7 +128,7 @@ int loadLevelSprites(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *le
     SDL_SetTextureBlendMode(*dest_text, SDL_BLENDMODE_BLEND);
     if(NULL == *dest_text)
     {
-        fprintf(stderr, "erreur SDL_CreateTexture in function loadLevelSprites : %s\n", SDL_GetError());
+        fprintf(stderr, "erreur SDL_CreateTexture in function loadLevelTiles : %s\n", SDL_GetError());
         return EXIT_FAILURE;
     }
     SDL_SetRenderTarget(renderer, *dest_text);
@@ -141,7 +141,9 @@ int loadLevelSprites(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *le
         {
             if( 0 != level_tiles_grid[i * nb_tuiles_x + j] )
             {
-                if( 0!= selectLvlAssetsSprite(level_tiles_grid[i * nb_tuiles_x + j], &source) )
+                if(i==7 && j==7)
+                    printf("test\n");
+                if( 0!= selectLvlAssetsTile(level_tiles_grid[i * nb_tuiles_x + j], &source) )
                     return EXIT_FAILURE;
                 if (0 != copieTextureSurRender(renderer, assets_tiles, j * TILE_SIZE, 
                     i * TILE_SIZE, source, SDL_FLIP_NONE, 1))
@@ -153,15 +155,15 @@ int loadLevelSprites(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *le
     return EXIT_SUCCESS;
 }
 
-int selectLvlAssetsSprite(int sprite_ID, SDL_Rect *source)
+int selectLvlAssetsTile(int sprite_ID, SDL_Rect *source)
 {
     int status = EXIT_FAILURE;
     if (sprite_ID < 1 || sprite_ID > 64)
     {
-        fprintf(stderr, "Erreur selectLvlAssetsSprite() : sprite_ID valeur interdite (%d)\n", sprite_ID);
+        fprintf(stderr, "Erreur selectLvlAssetsTile() : sprite_ID valeur interdite (%d)\n", sprite_ID);
         return status;
     }
-    //calcul de l'emplacement de la sprite sur la texture
+    //calcul de l'emplacement de la tile sur la texture
     int ligne = sprite_ID / 8;
     int colonne = sprite_ID % 8;
     colonne--;
@@ -218,4 +220,61 @@ int chosePlayerSprite(int direction, bool player_moving, bool playerID, int rapp
     if (playerID)
         spriteID+=2; //choisit une sprite de l'autre personnage
     return spriteID;
+}
+
+int choseNPCSprite(int direction, bool moving, int rapport_frame, SDL_RendererFlip *flip)
+//donne le bon identifiant de sprite en fonction des 3 paramètres
+{
+    int spriteID;
+    *flip = SDL_FLIP_NONE;
+    //indique si l'animation du mvt se fait en inversant l'image ou non
+    //(faux pour les directions gauche et droite car leur animation se 
+    //fait en alternant la sprite walking et la sprite stand)
+    if(direction == REQ_DIR_RIGHT)
+        *flip = SDL_FLIP_HORIZONTAL;
+    
+    if(!moving)
+        return 1;
+    switch(rapport_frame)
+    {
+        case 0:
+            spriteID = 1;
+            break;
+        case 1:
+            spriteID = 2;
+            break;
+        case 2:
+            spriteID = 3;
+            break;
+        case 3:
+            spriteID = 4;
+            break;
+    }
+    return spriteID;
+}
+
+int loadNPCSprite(SDL_Renderer *renderer, SDL_Texture *npc_texture,
+                     int pos_x, int pos_y, int sprite_ID, SDL_RendererFlip flip)
+{
+    int status = EXIT_FAILURE;
+    if (sprite_ID < 1 || sprite_ID > 4)
+    {
+        fprintf(stderr, "Erreur loadNPCSprite() : sprite_ID valeur interdite (%d)\n", sprite_ID);
+        return status;
+    }
+    //calcul de l'emplacement de la sprite sur la texture
+    int ligne = sprite_ID / 2;
+    int colonne = sprite_ID % 2;
+    colonne--;
+    if(colonne < 0)
+    {
+        ligne--;
+        colonne = 1;
+    }
+    SDL_Rect source = {colonne*(SPRITE_SIZE+8), ligne*SPRITE_SIZE, SPRITE_SIZE+8, SPRITE_SIZE};
+    if (0 != copieTextureSurRender(renderer, npc_texture, pos_x, pos_y, source, flip, WIN_SCALE))
+        return status;
+    
+    status = EXIT_SUCCESS;
+    return status;
 }
