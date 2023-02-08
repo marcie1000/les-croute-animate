@@ -17,7 +17,8 @@ enum window_parameters {
 };
 
 enum speeds {
-    WALKING_ANIMATION_FRAMES = 2
+    WALKING_ANIMATION_FRAMES = 2,
+    NPC_ANIMATION_FRAMES = 4
 };
 
 enum others {
@@ -68,21 +69,23 @@ enum touches_keymap {
     TOUCHE_JUMP = SDLK_SPACE
 };
 
-enum character_type {
-    BODY_TYPE_DANIEL,
-    BODY_TYPE_ANTOINE
-};
+//enum character_type {
+//
+//};
 
 enum interobj_types {
+    BODY_TYPE_DANIEL,
+    BODY_TYPE_ANTOINE,
+    NPC_SANGLIER,
     IT_NONE,
     IT_ENDWALL,
     IT_WALL,
-    IT_COIN,
-    IT_SANGLIER
+    IT_COIN
 };
 
-extern const char CROUTE_PNG_FILENAME[];
+extern const char CROUTE_SPRITES_PNG[];
 extern const char ASSETS_TILES_PNG[];
+extern const char NPC_SPRITES_PNG[];
 extern const char AUDIO_FILE_JUMP[];
 extern const char AUDIO_FILE_HURT[];
 extern const char AUDIO_FILE_BUMP[];

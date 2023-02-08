@@ -98,43 +98,13 @@ void tilesReading(int taille_x, int taille_y, FILE *level_file, char *buf, int b
     }
 }
 
-int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *nb_objs)
+int objArrayFill(FILE *level_file, char *buf, int buf_len, interobj **objs, int nb_objs)
 {
     int status = EXIT_FAILURE;
-    
-    //lecture du nb d'interobjects
-    lireLigne(level_file, buf, buf_len);
-    if(NULL == strstr(buf, "interobjects=,"))
-    {
-        fprintf(stderr, "Fichier corrompu (interobjects=).\n");
-        return status;
-    }
-    char *sous_chaine;
-    sous_chaine = strtok(buf, ",");
-    sous_chaine = strtok(NULL, ",");    
-    if(NULL == sous_chaine)
-    {
-        fprintf(stderr, "Fichier corrompu ( interobjects=[aucune valeur] ).\n");
-        return status;
-    }
-    *nb_objs = getNbrFromChars(sous_chaine);
-    
-    //arrête la fonction ici si il n'y a pas d'interobjects
-    if(*nb_objs == 0)
-        return EXIT_SUCCESS;
-    
-    //Réallocation du tableau objs maintenant que l'on connait le nombre d'interobjects
-    interobj *tmp = realloc( *objs, sizeof(interobj) * (*nb_objs) );
-    if (NULL == tmp)
-    {
-        fprintf(stderr, "erreur realloc objs\n");
-        return status;
-    }
-    *objs = tmp;
-    
+    char* sous_chaine;
     //============================================
     //boucle de remplissage du tableau objs
-    for(int i=0; i<(*nb_objs); i++)
+    for(int i=0; i<(nb_objs); i++)
     {
         lireLigne(level_file, buf, buf_len);
         if(NULL == buf)
@@ -168,7 +138,7 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
         else if (NULL != strstr(sous_chaine, "coin"))
             (*objs)[i].type = IT_COIN;
         else if (NULL != strstr(sous_chaine, "sanglier"))
-            (*objs)[i].type = IT_SANGLIER;
+            (*objs)[i].type = NPC_SANGLIER;
         else
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : type=,[???]\n", i);
@@ -263,7 +233,25 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
             (*objs)[i].pdv = getNbrFromChars(sous_chaine);
             
         //==============
-        //sprite_id=
+        //direction=
+        sous_chaine = strtok(NULL, ",");
+        if (NULL == strstr(sous_chaine, "dir=")) 
+        {
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : dir=\n", i);
+            return status;
+        }
+        //value
+        sous_chaine = strtok(NULL, ",");
+        if (NULL == sous_chaine)
+        {
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : dir=[???]\n", i);
+            return status;
+        }
+        (*objs)[i].direction = getNbrFromChars(sous_chaine);
+            
+            
+        //==============
+        //enabled=
         sous_chaine = strtok(NULL, ",");
         if (NULL == strstr(sous_chaine, "enabled=")) 
         {
@@ -282,7 +270,48 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
         else
             (*objs)[i].enabled = false;
 
-    }    
+    } //fin boucle for
+    status = EXIT_SUCCESS;
+    return status;
+
+}
+
+int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *nb_objs)
+{
+    int status = EXIT_FAILURE;
+    
+    //lecture du nb d'interobjects
+    lireLigne(level_file, buf, buf_len);
+    if(NULL == strstr(buf, "interobjects=,"))
+    {
+        fprintf(stderr, "Fichier corrompu (interobjects=).\n");
+        return status;
+    }
+    char *sous_chaine;
+    sous_chaine = strtok(buf, ",");
+    sous_chaine = strtok(NULL, ",");    
+    if(NULL == sous_chaine)
+    {
+        fprintf(stderr, "Fichier corrompu ( interobjects=[aucune valeur] ).\n");
+        return status;
+    }
+    *nb_objs = getNbrFromChars(sous_chaine);
+    
+    //arrête la fonction ici si il n'y a pas d'interobjects
+    if(*nb_objs == 0)
+        return EXIT_SUCCESS;
+    
+    //Réallocation du tableau objs maintenant que l'on connait le nombre d'interobjects
+    interobj *tmp = realloc( *objs, sizeof(interobj) * (*nb_objs) );
+    if (NULL == tmp)
+    {
+        fprintf(stderr, "erreur realloc objs\n");
+        return status;
+    }
+    *objs = tmp;
+    
+    objArrayFill(level_file, buf, buf_len, objs, *nb_objs);
+    
     
     status = EXIT_SUCCESS;
     return status;

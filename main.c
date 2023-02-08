@@ -14,8 +14,9 @@
 #include "npc.h"
 
 //constantes
-const char CROUTE_PNG_FILENAME[] = "images/croute_sprites.png";
+const char CROUTE_SPRITES_PNG[] = "images/croute_sprites.png";
 const char ASSETS_TILES_PNG[] = "images/GBC_assets_n_tiles.png";
+const char NPC_SPRITES_PNG[] = "images/NPC_sprites.png";
 const char AUDIO_FILE_JUMP[] = "sounds/Jump.wav";
 const char AUDIO_FILE_HURT[] = "sounds/Hurt.wav";
 const char AUDIO_FILE_BUMP[] = "sounds/Bump.wav";
@@ -39,6 +40,7 @@ int main(int argc, char *argv[])
     SDL_Renderer *main_renderer = NULL;
     
     SDL_Texture *croute_texture = NULL; //contient les sprites du perso principal
+    SDL_Texture *npc_texture = NULL; //sprites des NPCs
     SDL_Texture *assets_tiles = NULL; //contient les sprites du décor etc
     SDL_Texture *level_main = NULL; //contient le décor principal du niveau (au niveau du joueur)
     
@@ -59,12 +61,13 @@ int main(int argc, char *argv[])
     
     if (0 != initSDL(&main_renderer, &main_window))
         goto Quitter;
-    if (0 != initTextures(main_renderer, &croute_texture, &assets_tiles))
+    if (0 != initTextures(main_renderer, &croute_texture, &assets_tiles, &npc_texture))
         goto Quitter;
     //charge les fichiers audio
     loadAudio(&jump, &hurt, &bump, &coin);
     character player;
     initPlayer(&player, true);
+    
     
     //mainloop flag
     bool quit = false;
@@ -75,6 +78,7 @@ int main(int argc, char *argv[])
     int frame_walking = 0;
     int frame_jump = 0;
     int frame_fall = 0;
+    int frame_npc = 0;
     //int frame_camMov = 0;
     //mouvement du personnage flag
     bool jump_ended = true; //fin d'appui sur touche jump
@@ -86,8 +90,11 @@ int main(int argc, char *argv[])
     //sound effects
     bool hurt_soundflag = false;
     bool bump_soundflag = false;
-    //level
+    
+    //===================
+    //LEVEL
     int *level_tiles_grid = malloc(sizeof(int[10][10]));
+    character *npcs = malloc(sizeof(character));
     interobj *objs = malloc(sizeof(interobj));
     int nb_tuiles_x, nb_tuiles_y, nb_objs;
     if ( 0 != loadLevel(LEVEL_1_FILENAME, &nb_tuiles_x, &nb_tuiles_y, &level_tiles_grid, &objs, &nb_objs) )
@@ -113,7 +120,7 @@ int main(int argc, char *argv[])
             
             //selectionne la direction où regarde le player character
             if((requete >= REQ_DIR_LEFT) && (requete <= REQ_DIR_DOWN))
-                player.direction = requete;
+                player.obj.direction = requete;
         }
 
         //commence le saut
@@ -176,7 +183,7 @@ int main(int argc, char *argv[])
         
 
         //MOUVEMENT AUTO DE LA CAMÉRA :
-        int diff = player.collider.x - camera.texLoadSrc.x;
+        int diff = player.obj.collider.x - camera.texLoadSrc.x;
         //si le perso a pu avancer
         if(player_moved)
         {
@@ -195,8 +202,8 @@ int main(int argc, char *argv[])
         //si joueur en dehors de la caméra
         if(!player_moved && ((diff < 0) || (diff > SPRITE_SIZE*NB_SPRITES_X)))
         {
-            camera.texLoadSrc.x = player.position.x;
-            camera.absCoord.x = player.position.x;
+            camera.texLoadSrc.x = player.obj.position.x;
+            camera.absCoord.x = player.obj.position.x;
         }
         if(camera.moving)
         {
@@ -218,18 +225,20 @@ int main(int argc, char *argv[])
         
         
         //donne le bon identifiant de sprite en fonction des 3 paramètres
-        spriteID = chosePlayerSprite(player.direction, player.walking, player.body_type, frame_walking/8, &flip);
+        spriteID = chosePlayerSprite(player.obj.direction, player.walking, player.obj.type, frame_walking/8, &flip);
         //render level
         SDL_SetRenderTarget(main_renderer, NULL);
         copieTextureSurRender(main_renderer, level_main, 0, 0, camera.texLoadSrc, SDL_FLIP_NONE, WIN_SCALE);
         //charge la texture du perso dans le renderer
-        loadPlayerSprite(main_renderer, croute_texture, player.position.x-camera.texLoadSrc.x, player.position.y, spriteID, flip);        
+        loadPlayerSprite(main_renderer, croute_texture, player.obj.position.x-camera.texLoadSrc.x, player.obj.position.y, spriteID, flip);        
         //update screen
         SDL_RenderPresent(main_renderer);
 
         //cycle animation
         if((frame_walking/8) >= WALKING_ANIMATION_FRAMES)
             frame_walking = 0;
+        if((frame_npc/8) >= NPC_ANIMATION_FRAMES)
+            frame_npc = 0;
         if(!player.jumping)
             frame_jump = 0;
     }
@@ -237,6 +246,7 @@ int main(int argc, char *argv[])
     status = EXIT_SUCCESS;
 Quitter:
     free(level_tiles_grid);
+    free(npcs);
     free(objs);
     if(NULL != jump)
         Mix_FreeChunk(jump);
@@ -246,7 +256,7 @@ Quitter:
         Mix_FreeChunk(bump);
     if(NULL != coin)
         Mix_FreeChunk(coin);
-    destroyTextures(&croute_texture, &assets_tiles, &level_main);
+    destroyTextures(&croute_texture, &assets_tiles, &level_main, &npc_texture);
     quitSDL(&main_renderer, &main_window);
     
     return status;

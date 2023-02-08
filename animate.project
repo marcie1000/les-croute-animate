@@ -36,9 +36,7 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="GCC" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-gdwarf-2;-O0;-Wall" C_Options="-gdwarf-2;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="1">
-        <IncludePath Value="."/>
-      </Compiler>
+      <Compiler Options="-gdwarf-2;-O0;-Wall" C_Options="-gdwarf-2;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="1"/>
       <Linker Options="" Required="yes">
         <Library Value="SDL2"/>
         <Library Value="SDL2_ttf"/>

@@ -11,22 +11,23 @@
 
 void initPlayer(character *ch, bool initmoney)
 {
-    ch->body_type = BODY_TYPE_DANIEL;
+    ch->obj.type = BODY_TYPE_DANIEL;
     
-    ch->position.x=0; 
-    ch->position.y=0;
+    ch->obj.position.x=0; 
+    ch->obj.position.y=0;
     
-    ch->collider.x=PLAYER_COL_SHIFT; 
-    ch->collider.y=2; 
-    ch->collider.w = SPRITE_SIZE - PLAYER_COL_SHIFT*2; 
-    ch->collider.h = SPRITE_SIZE-2;
+    ch->obj.collider.x=PLAYER_COL_SHIFT; 
+    ch->obj.collider.y=2; 
+    ch->obj.collider.w = SPRITE_SIZE - PLAYER_COL_SHIFT*2; 
+    ch->obj.collider.h = SPRITE_SIZE-2;
     
-    ch->pt_de_vie = 1;
+    ch->obj.pdv = 1;
     ch->puissance = 1;
     ch->walking = false;
     ch->jumping = false;
     ch->falling = false;
-    ch->direction = REQ_DIR_DOWN;
+    ch->obj.direction = REQ_DIR_DOWN;
+    ch->obj.enabled = true;
     if(initmoney)
         ch->money = 0;
 }
@@ -40,9 +41,9 @@ bool CheckPlayerOnTheGround(int nb_objs, interobj *objs, character *player)
     
     //assignations aux valeurs des rectangles
     //rectangle obj_col
-    leftA = player->collider.x;
-    rightA = player->collider.x + player->collider.w;
-    bottomA = player->collider.y + player->collider.h;
+    leftA = player->obj.collider.x;
+    rightA = player->obj.collider.x + player->obj.collider.w;
+    bottomA = player->obj.collider.y + player->obj.collider.h;
     //rectangle b
     //test de tous les colliders
     for(int i=0; i<nb_objs; i++)
@@ -68,7 +69,7 @@ bool playerFall(int nb_objs, interobj *objs, character *player, int frame_fall, 
 {
     *bump_soundflag = false;
     //arrête le saut si on est sorti de l'écran
-    if(player->position.y > NATIVE_HEIGHT)
+    if(player->obj.position.y > NATIVE_HEIGHT)
     {
         initPlayer(player, false);
         return false;
@@ -87,8 +88,8 @@ bool playerFall(int nb_objs, interobj *objs, character *player, int frame_fall, 
     int i=1;
     while ( !on_the_ground && (i<=vitesse) )
     {
-        player->position.y ++;
-        player->collider.y ++;
+        player->obj.position.y ++;
+        player->obj.collider.y ++;
         on_the_ground = CheckPlayerOnTheGround(nb_objs, objs, player);
         //si vient de toucher le sol
         if(on_the_ground)
@@ -281,8 +282,8 @@ bool checkAllEndwallCollisions(SDL_Rect a, int nb_objs, interobj *objs, int cam_
 bool updatePositionJump(int nb_objs, interobj *objs, character *player, int frame_jump, bool *hurt_soundflag)
 {
     *hurt_soundflag = false;
-    flpoint pos_init = player->position;
-    SDL_Rect col_init = player->collider;
+    flpoint pos_init = player->obj.position;
+    SDL_Rect col_init = player->obj.collider;
     int vitesse;
     //calcul de la vitesse de saut qui diminue progressivement
     vitesse = -(gravity) * frame_jump + jump_init_speed;
@@ -290,15 +291,15 @@ bool updatePositionJump(int nb_objs, interobj *objs, character *player, int fram
     if(vitesse <= 0)
         return false;
 
-    player->position.y -= vitesse;
+    player->obj.position.y -= vitesse;
     
     for(int i=0; i<vitesse; i++)
     {
-        player->collider.y --;
-        if( checkAllCollisions(player->collider, nb_objs, objs, REQ_JUMP) )
+        player->obj.collider.y --;
+        if( checkAllCollisions(player->obj.collider, nb_objs, objs, REQ_JUMP) )
         {
-            player->collider.y = col_init.y - i;
-            player->position.y = pos_init.y - i;
+            player->obj.collider.y = col_init.y - i;
+            player->obj.position.y = pos_init.y - i;
             *hurt_soundflag = true;
             return false;
         }
@@ -334,8 +335,8 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
     float deplacement = left_right * player_speed;
     bool col = false;
     
-    SDL_Rect coll_tmp = player->collider; //ne change pas encore
-    flpoint pos_tmp = player->position;
+    SDL_Rect coll_tmp = player->obj.collider; //ne change pas encore
+    flpoint pos_tmp = player->obj.position;
     pos_tmp.x += deplacement; //change ici
     
     //test de collision pour chaque position comprise dans [0; |deplacement|]
@@ -346,21 +347,21 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
         if (col)
         {
             //rabaisse à la dernière position possible
-            pos_tmp.x = player->position.x + i*left_right;
+            pos_tmp.x = player->obj.position.x + i*left_right;
             //on utilise position comme base car si player_speed n'est pas
             //entière cela causerait un décalage entre la position
             //du collider (entière) et la position flottante du joueur
-            coll_tmp.x = player->position.x + i*left_right;
+            coll_tmp.x = player->obj.position.x + i*left_right;
             break; //sort de la boucle
         }
     }
     
     //si il n'y a pas eu de collision
     if(!col)
-        coll_tmp.x = player->position.x + deplacement;
+        coll_tmp.x = player->obj.position.x + deplacement;
     
-    player->position.x = pos_tmp.x;
-    player->collider.x = coll_tmp.x + PLAYER_COL_SHIFT;
+    player->obj.position.x = pos_tmp.x;
+    player->obj.collider.x = coll_tmp.x + PLAYER_COL_SHIFT;
     
     return !col;
     
@@ -372,7 +373,7 @@ bool checkCollisionSpecialEffect(int nb_objs, interobj **objs, character *player
     for(int i = 0; i<nb_objs; i++)
     {
         if( ( (*objs)[i].enabled ) && ( (*objs)[i].type == IT_COIN ) )
-            col = checkCollision(player->collider, (*objs)[i].collider);
+            col = checkCollision(player->obj.collider, (*objs)[i].collider);
         if(col)
         {
             objCollisionSpecialEffects(i, objs, player, level_tiles_grid, nbtuilesX);

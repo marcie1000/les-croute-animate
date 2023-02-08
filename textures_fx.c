@@ -7,11 +7,11 @@
 #include "textures_fx.h"
 #include "enumerations.h"
 
-int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, SDL_Texture **assets_tiles)
+int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, SDL_Texture **assets_tiles, SDL_Texture **npc_texture)
 {
     int status = EXIT_FAILURE;
     
-    *croute_texture = IMG_LoadTexture(renderer, CROUTE_PNG_FILENAME);
+    *croute_texture = IMG_LoadTexture(renderer, CROUTE_SPRITES_PNG);
     if(NULL == *croute_texture)
     {
         fprintf(stderr, "erreur IMG_LoadTexture() croute_texture : %s\n", IMG_GetError());
@@ -25,14 +25,23 @@ int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, SDL_Textu
         return status;
     }
     
+    *npc_texture = IMG_LoadTexture(renderer, NPC_SPRITES_PNG);
+    if(NULL == *npc_texture)
+    {
+        fprintf(stderr, "erreur IMG_LoadTexture() npc_texture : %s\n", IMG_GetError());
+        return status;
+    }
+    
     status = EXIT_SUCCESS;
     return status;
 }
 
-int destroyTextures(SDL_Texture **croute_texture, SDL_Texture **assets_tiles, SDL_Texture **level_main)
+int destroyTextures(SDL_Texture **croute_texture, SDL_Texture **assets_tiles, SDL_Texture **level_main, SDL_Texture **npc_texture)
 {
     int status = EXIT_FAILURE;
     
+    if(NULL != *npc_texture)
+        SDL_DestroyTexture(*npc_texture);
     if(NULL != *croute_texture)
         SDL_DestroyTexture(*croute_texture);
     if(NULL != *assets_tiles)
