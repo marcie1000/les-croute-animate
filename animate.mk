@@ -14,11 +14,11 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=Adelia
-Date                   :=08/02/23
+Date                   :=07/03/23
 CodeLitePath           :=/home/adelia/.codelite
 MakeDirCommand         :=mkdir -p
-LinkerName             :=/usr/bin/g++
-SharedObjectLinkerName :=/usr/bin/g++ -shared -fPIC
+LinkerName             :=/usr/bin/clang++-15
+SharedObjectLinkerName :=/usr/bin/clang++-15 -shared -fPIC
 ObjectSuffix           :=.o
 DependSuffix           :=.o.d
 PreprocessSuffix       :=.i
@@ -41,19 +41,19 @@ LinkOptions            :=
 IncludePath            :=  $(IncludeSwitch). 
 IncludePCH             := 
 RcIncludePath          := 
-Libs                   := $(LibrarySwitch)SDL2 $(LibrarySwitch)SDL2_ttf $(LibrarySwitch)SDL2_image $(LibrarySwitch)SDL2_mixer 
-ArLibs                 :=  "SDL2" "SDL2_ttf" "SDL2_image" "SDL2_mixer" 
+Libs                   := $(LibrarySwitch)SDL2 $(LibrarySwitch)SDL2_ttf $(LibrarySwitch)SDL2_image $(LibrarySwitch)SDL2_mixer $(LibrarySwitch)m 
+ArLibs                 :=  "SDL2" "SDL2_ttf" "SDL2_image" "SDL2_mixer" "m" 
 LibPath                := $(LibraryPathSwitch). 
 
 ##
 ## Common variables
 ## AR, CXX, CC, AS, CXXFLAGS and CFLAGS can be overridden using an environment variable
 ##
-AR       := /usr/bin/ar rcu
-CXX      := /usr/bin/g++
-CC       := /usr/bin/gcc
+AR       := /usr/bin/ar
+CXX      := /usr/bin/clang++-15
+CC       := /usr/bin/clang-15
 CXXFLAGS :=  -gdwarf-2 -O0 -Wall $(Preprocessors)
-CFLAGS   :=  -gdwarf-2 -O0 -Wall $(Preprocessors)
+CFLAGS   := -std=c17 -gdwarf-2 -O0 -Wall $(Preprocessors)
 ASFLAGS  := 
 AS       := /usr/bin/as
 

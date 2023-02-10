@@ -83,8 +83,8 @@ void tilesReading(int taille_x, int taille_y, FILE *level_file, char *buf, int b
                 break; //break for j
             
             int k = 0;
-            strcpy(sous_chaine, "");
-            char c[] = "";
+            strcpy(sous_chaine, "\0");
+            char c[] = "\0";
             do
             {
                 c[0] = buf[j+k];

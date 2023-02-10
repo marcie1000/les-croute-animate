@@ -11,7 +11,7 @@
 
 void initPlayer(character *ch, bool initmoney)
 {
-    ch->obj.type = BODY_TYPE_DANIEL;
+    ch->obj.type = BODY_TYPE_ANTOINE;
     
     ch->obj.position.x=0; 
     ch->obj.position.y=0;
@@ -71,12 +71,6 @@ bool CheckPlayerOnTheGround(int nb_objs, interobj *objs, character *player)
 bool playerFall(int nb_objs, interobj *objs, character *player, int frame_fall, bool *bump_soundflag)
 {
     *bump_soundflag = false;
-    //arrête le saut si on est sorti de l'écran
-    if(player->obj.position.y > NATIVE_HEIGHT)
-    {
-        initPlayer(player, false);
-        return false;
-    }
     bool on_the_ground = CheckPlayerOnTheGround(nb_objs, objs, player);
     //update position si le joueur n'a pas les pieds sur le sol
     int vitesse;
@@ -343,7 +337,7 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
     pos_tmp.x += deplacement; //change ici
     
     //test de collision pour chaque position comprise dans [0; |deplacement|]
-    for (int i=0; i <= abs(deplacement); i++)
+    for (int i=0; i <= fabs(deplacement); i++)
     {
         coll_tmp.x += i*left_right;
         col = checkAllCollisions(coll_tmp, nb_objs, objs, requete);
@@ -370,9 +364,23 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
     
 }
 
-bool checkCollisionSpecialEffect(int nb_objs, interobj **objs, character *player, int **level_tiles_grid, int nbtuilesX, int *type)
+bool checkCollisionSpecialEffect(int nb_objs, interobj **objs, int nb_npcs, character **npcs,
+                                 character *player, int **level_tiles_grid, int nbtuilesX, int *type)
 {
     bool col = false;
+    
+    for(int i = 0; i<nb_npcs; i++)
+    {
+        if( ( (*npcs)[i].obj.enabled ) && ( (*npcs)[i].obj.type == NPC_SANGLIER ) )
+            col = checkCollision(player->obj.collider, (*npcs)[i].obj.collider);
+        if(col)
+        {
+            *type = NPC_SANGLIER;
+            player->obj.pdv -= (*npcs)[i].puissance;
+            return col;
+        }
+    }
+    
     for(int i = 0; i<nb_objs; i++)
     {
         if( ( (*objs)[i].enabled ) && ( (*objs)[i].type == IT_COIN ) )

@@ -1,5 +1,5 @@
 #ignore files by extensions :
-*.png
-*.wav
-*.ods
-*.csv#
+#*.png
+#*.wav
+#*.ods
+#*.csv#

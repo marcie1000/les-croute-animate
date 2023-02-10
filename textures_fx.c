@@ -107,6 +107,7 @@ int loadPlayerSprite(SDL_Renderer *renderer, SDL_Texture *croute_texture,
 }
 
 int initLevelTextures(SDL_Texture **level_main, SDL_Renderer *renderer, int nb_tuiles_x, int nb_tuiles_y)
+//crée la texture du niveau
 {
     int largeur_texture = nb_tuiles_x*TILE_SIZE;
     *level_main = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 
@@ -121,6 +122,7 @@ int initLevelTextures(SDL_Texture **level_main, SDL_Renderer *renderer, int nb_t
 
 int loadLevelTiles(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *level_tiles_grid, 
                               int nb_tuiles_x, int nb_tuiles_y, SDL_Renderer *renderer)
+//remplit la texture dest_text avec les bonnes tuiles
 {
     SDL_Rect source;
     //TEXTURE_SHIFTSIZE_X sert à créer l'espace nécesssaire à la mise à jour de la texture hors écran
@@ -158,7 +160,7 @@ int loadLevelTiles(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *leve
 int selectLvlAssetsTile(int sprite_ID, SDL_Rect *source)
 {
     int status = EXIT_FAILURE;
-    if (sprite_ID < 1 || sprite_ID > 64)
+    if (sprite_ID < 1 || sprite_ID > 160)
     {
         fprintf(stderr, "Erreur selectLvlAssetsTile() : sprite_ID valeur interdite (%d)\n", sprite_ID);
         return status;

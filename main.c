@@ -34,7 +34,7 @@ extern void fonctionSwitchEvent(SDL_Event, int *, int *, int *, bool */*, int * 
 
 
 int main(int argc, char *argv[])
-{
+{    
     int status = EXIT_FAILURE;
     SDL_Window *main_window = NULL;
     SDL_Renderer *main_renderer = NULL;
@@ -60,26 +60,19 @@ int main(int argc, char *argv[])
     Mix_Chunk *coin = NULL;
     
     if (0 != initSDL(&main_renderer, &main_window))
-        goto Quitter;
+        goto SDL_Cleanup;
     if (0 != initTextures(main_renderer, &croute_texture, &assets_tiles, &npc_texture))
-        goto Quitter;
+        goto SDL_Cleanup;
     //charge les fichiers audio
     loadAudio(&jump, &hurt, &bump, &coin);
     character player;
     initPlayer(&player, true);
-    
     
     //mainloop flag
     bool quit = false;
     //event handler
     SDL_Event e;
     int requete = REQ_NONE;
-    //current animation walking and jumping frame
-//    int frame_walking = 0;
-//    int frame_jump = 0;
-//    int frame_fall = 0;
-//    int frame_npc = 0;
-    //int frame_camMov = 0;
     //mouvement du personnage flag
     bool jump_ended = true; //fin d'appui sur touche jump
     int up_down = 0;
@@ -98,7 +91,7 @@ int main(int argc, char *argv[])
     interobj *objs = malloc(sizeof(interobj));
     int nb_tuiles_x, nb_tuiles_y, nb_objs, nb_npcs;
     if ( 0 != loadLevel(LEVEL_1_FILENAME, &nb_tuiles_x, &nb_tuiles_y, &level_tiles_grid, &objs, &nb_objs, &npcs, &nb_npcs) )
-        goto Quitter;
+        goto Quit;
     initNPCs(&npcs, nb_npcs);
     initLevelTextures(&level_main, main_renderer, nb_tuiles_x, nb_tuiles_y);
     loadLevelTiles(&level_main, assets_tiles, level_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer);
@@ -228,10 +221,15 @@ int main(int argc, char *argv[])
         }
         
         //RECHERCHE D'ÉVÉNEMENTS LIÉS À LA RENCONTRE D'OBJETS SPÉCIAUX
-        if(checkCollisionSpecialEffect(nb_objs, &objs, &player, &level_tiles_grid, nb_tuiles_x, &obj_type))
+        if(checkCollisionSpecialEffect(nb_objs, &objs, nb_npcs, &npcs, &player, &level_tiles_grid, nb_tuiles_x, &obj_type))
         {
-            loadLevelTiles(&level_main, assets_tiles, level_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer);
-            Mix_PlayChannel(-1, coin, 0);
+            if(obj_type == IT_COIN)
+            {
+                loadLevelTiles(&level_main, assets_tiles, level_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer);
+                Mix_PlayChannel(-1, coin, 0);
+            }
+            else if (obj_type == NPC_SANGLIER)
+                Mix_PlayChannel(-1, hurt, 0);
         }
         
 
@@ -277,6 +275,10 @@ int main(int argc, char *argv[])
         }
         
         
+        //RÉINITIALISATION DE LA POSITION DU JOUEUR
+        if((player.obj.position.y > NATIVE_HEIGHT) || (player.obj.pdv <= 0))
+            initPlayer(&player, false);
+        
         
         //RENDER======================
         //render level
@@ -308,10 +310,11 @@ int main(int argc, char *argv[])
     }
 
     status = EXIT_SUCCESS;
-Quitter:
+Quit:
     free(level_tiles_grid);
     free(npcs);
     free(objs);
+SDL_Cleanup:
     if(NULL != jump)
         Mix_FreeChunk(jump);
     if(NULL != hurt)
