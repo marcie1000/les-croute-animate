@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
@@ -9,22 +11,49 @@ int getNbrFromChars(char *chaine)
 //convertit une chaine en nombre.
 //si aucun nombre trouvé, renvoie 0
 {
-    int lenght = strlen(chaine);
-    int newLenght = lenght;
+    int length = strlen(chaine);
+    int newlength = length;
     int value = 0;
-    for(int i = 0; i < lenght; i++)
+    for(int i = 0; i < length; i++)
     {
         //si n'est pas un caractère chiffre (en commençant par la fin)
-        if((chaine[lenght-i-1] < 48) || (chaine[lenght-i-1] > 57))
-            newLenght--;
+        if((chaine[length-i-1] < 48) || (chaine[length-i-1] > 57))
+            newlength--;
     }
-    lenght = newLenght;
-    for(int i = 0; i < lenght; i++)
+    length = newlength;
+    for(int i = 0; i < length; i++)
     {
-        value = value + (chaine[lenght-i-1]-48) * (pow(10, i));
+        value = value + (chaine[length-i-1]-48) * (pow(10, i));
     }
     return value;
     
+}
+
+int getCharsFromNmbr(unsigned int value, char *chaine)
+//Convertit un nombre en chaine.
+//Retourne le nombre de chiffres.
+{
+    int tmp = value;
+    int len = 0;
+    //calcule le nombre de chiffres
+    while(tmp != 0)
+    {
+        tmp = tmp/10;
+        len++;
+    }
+    
+    //limites
+    if(len > sizeof(chaine))
+        len = sizeof(chaine);
+    
+    for(int i = 0; i<len; i++)
+    {
+        int divide = value / (pow(10, len-i-1));
+        chaine[i] = '0' + divide;
+        value = value - divide * pow(10, len-i-1);
+    }
+    chaine[len] = '\0';
+    return len;
 }
 
 int getLevelSize(char *text_line, int *taille_x, int *taille_y)
@@ -55,7 +84,7 @@ int getLevelSize(char *text_line, int *taille_x, int *taille_y)
     return status;
 }
 
-void tilesReading(int taille_x, int taille_y, FILE *level_file, char *buf, int buf_len, int **level_tiles_grid)
+void tilesReading(int taille_x, int taille_y, FILE *level_file, char *buf, int buf_len, int **tiles_array)
 {
     //lecture de chaque ligne
     for(int i = 0; i < taille_y; i++)
@@ -92,7 +121,7 @@ void tilesReading(int taille_x, int taille_y, FILE *level_file, char *buf, int b
                 k++;
             }while( ( buf[j+k] >= 48 ) && ( buf[j+k] <= 57 ) ); //tant que char est un chiffre
             //convertir la sous chaine en nombre et l'ajoute dans le tableau
-            (*level_tiles_grid)[i * (taille_x) + pos_x] = getNbrFromChars(sous_chaine);
+            (*tiles_array)[i * (taille_x) + pos_x] = getNbrFromChars(sous_chaine);
             j = j+k-1;
         }
     }
@@ -140,10 +169,7 @@ int objArrayFill(FILE *level_file, char *buf, int buf_len, interobj **objs, int 
         else if (NULL != strstr(sous_chaine, "sanglier"))
             (*objs)[i].type = NPC_SANGLIER;
         else
-        {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : type=,[???]\n", i);
-            return status;
-        }
+            (*objs)[i].type = IT_NONE;
         
         
         //==============
@@ -298,18 +324,20 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
         return status;
     }
     *nb_objs = getNbrFromChars(sous_chaine);
-    
-    //Réallocation du tableau objs maintenant que l'on connait le nombre d'interobjects
-    interobj *tmp = realloc( *objs, sizeof(interobj) * (*nb_objs) );
-    if (NULL == tmp)
+    if(*nb_objs != 0)
     {
-        fprintf(stderr, "erreur realloc objs\n");
-        return status;
+        //Réallocation du tableau objs maintenant que l'on connait le nombre d'interobjects
+        interobj *tmp = realloc( *objs, sizeof(interobj) * (*nb_objs) );
+        if (NULL == tmp)
+        {
+            fprintf(stderr, "erreur realloc objs\n");
+            return status;
+        }
+        *objs = tmp;
+        //remplissage
+        if (0 != objArrayFill(level_file, buf, buf_len, objs, *nb_objs))
+            return status;
     }
-    *objs = tmp;
-    //remplissage
-    if (0 != objArrayFill(level_file, buf, buf_len, objs, *nb_objs))
-        return status;
     
     //lecture du nb de NPCS
     lireLigne(level_file, buf, buf_len);
@@ -375,8 +403,8 @@ int objReading(FILE *level_file, char *buf, int buf_len, interobj **objs, int *n
     return status;
 }
 
-int loadLevel(const char* level_filename, int *taille_x, int *taille_y, int **level_tiles_grid, 
-              interobj **objs, int *nb_objs, character **npcs, int *nb_npcs)
+int loadLevel(const char* level_filename, int *taille_x, int *taille_y, int **main_tiles_array, 
+              int **overlay_tiles_array, interobj **objs, int *nb_objs, character **npcs, int *nb_npcs)
 //fonction principale pour le chargement d'un fichier niveau .csv
 {
     int status = EXIT_FAILURE;
@@ -397,25 +425,22 @@ int loadLevel(const char* level_filename, int *taille_x, int *taille_y, int **le
     if(NULL == strstr(buf, "level_size,"))
     {
         fprintf(stderr, "Fichier corrompu 1.\n");
-        free(buf);
-        return status;
+        goto Cleanup_all;
     }
     *taille_x = 0;
     *taille_y = 0; //variables contenant les tailles du niveau
     if(0 != getLevelSize(buf, taille_x, taille_y))
     {
         fprintf(stderr, "Fichier corrompu 2.\n");
-        free(buf);
-        return status;
+        goto Cleanup_all;
     }
     
-    //ligne start_grid
+    //ligne start_main_grid
     lireLigne(level_file, buf, buf_len);
-    if(NULL == strstr(buf, "start_grid"))
+    if(NULL == strstr(buf, "start_main_grid"))
     {
-        fprintf(stderr, "Fichier corrompu (start).\n");
-        free(buf);
-        return status;
+        fprintf(stderr, "Fichier corrompu (start_main_grid).\n");
+        goto Cleanup_all;
     }
     
     //vérification de la taille max
@@ -424,8 +449,7 @@ int loadLevel(const char* level_filename, int *taille_x, int *taille_y, int **le
     if( *taille_x > (INT_MAX / 4) )
     {
         fprintf(stderr, "Erreur : la taille du niveau dépasse les valeurs admissibles ( *taille_x > (INT_MAX / 4) )\n");
-        free(buf);
-        return status;
+        goto Cleanup_all;
     }
     
     //réalloc de buf car on connait maintenant la taille des lignes
@@ -436,56 +460,85 @@ int loadLevel(const char* level_filename, int *taille_x, int *taille_y, int **le
         if (NULL == tmp)
         {
             fprintf(stderr, "erreur realloc.\n");
-            free(buf);
-            return status;
+            goto Cleanup_all;
         }
         buf = tmp;
     }
     
     //reallocation dynamique du tableau de numéro des tuiles
     //maintenant que l'on connait sa taille
-    int *tmp = realloc( *level_tiles_grid, sizeof( int[*taille_y][*taille_x] ) );
+    int *tmp = realloc( *main_tiles_array, sizeof( int[*taille_y][*taille_x] ) );
     if (NULL == tmp)
     {
-        fprintf(stderr, "erreur realloc *level_tiles_grid\n");
-        return status;
+        fprintf(stderr, "erreur realloc *main_tiles_array in fct loadLevel\n");
+        goto Cleanup_all;
     }
-    *level_tiles_grid = tmp;
+    *main_tiles_array = tmp;
+    
+    tmp = realloc( *overlay_tiles_array, sizeof( int[*taille_y][*taille_x] ) );
+    if (NULL == tmp)
+    {
+        fprintf(stderr, "erreur realloc *overlay_tiles_array in fct loadLevel\n");
+        goto Cleanup_all;
+    }
+    *overlay_tiles_array = tmp;
     
     //init a 0
-    for (int i = 0; i < ((*taille_x) * (*taille_y)); i++)
-        (*level_tiles_grid)[i] = 0;
+    memset(*main_tiles_array, 0, sizeof( int[*taille_y][*taille_x] ) );
+    memset(*overlay_tiles_array, 0, sizeof( int[*taille_y][*taille_x] ) );
     
-    //lecture des tuiles du décor et remplissage du tableau level_tiles_grid
-    tilesReading(*taille_x, *taille_y, level_file, buf, buf_len, level_tiles_grid);
+    //lecture des tuiles du décor et remplissage du tableau main_tiles_array
+    tilesReading(*taille_x, *taille_y, level_file, buf, buf_len, main_tiles_array);
     
-    //ligne end_grid
+    //ligne end_main_grid
     lireLigne(level_file, buf, buf_len);
-    if(NULL == strstr(buf, "end_grid"))
+    if(NULL == strstr(buf, "end_main_grid"))
     {
-        fprintf(stderr, "Fichier corrompu (end).\n");
-        free(buf);
-        return status;
+        fprintf(stderr, "Fichier corrompu (end_main_grid).\n");
+        goto Cleanup_all;
+    }
+    
+    //ligne start_overlay_grid
+    lireLigne(level_file, buf, buf_len);
+    if(NULL == strstr(buf, "start_overlay_grid"))
+    {
+        fprintf(stderr, "Fichier corrompu (start_overlay_grid).\n");
+        goto Cleanup_all;
+    }
+    
+    //lecture des tuiles du décor et remplissage du tableau overlay_tiles_array
+    tilesReading(*taille_x, *taille_y, level_file, buf, buf_len, overlay_tiles_array);
+    
+    //ligne end_overlay_grid
+    lireLigne(level_file, buf, buf_len);
+    if(NULL == strstr(buf, "end_overlay_grid"))
+    {
+        fprintf(stderr, "Fichier corrompu (end_overlay_grid).\n");
+        goto Cleanup_all;
     }
     
     //lecture des interobjects
     if ( 0 != objReading(level_file, buf, buf_len, objs, nb_objs, npcs, nb_npcs) )
     {
-        free(buf);
-        return status;
+        goto Cleanup_all;
     }
+    
+    status = EXIT_SUCCESS;
+    
+Cleanup_all:
+    
+    free(buf);
+    
+//Close_file:
     
     //fermeture du fichier
     if (fclose(level_file) == EOF)
     {
         fprintf(stderr, "Erreur fermeture du fichier fclose()\n");
         free(buf);
-        return status;
+        status = EXIT_FAILURE;
     }
     
-    status = EXIT_SUCCESS;
-    
-    free(buf);
     return status;
 }
 

@@ -7,7 +7,9 @@
 #include "textures_fx.h"
 #include "enumerations.h"
 
-int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, SDL_Texture **assets_tiles, SDL_Texture **npc_texture)
+
+int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, SDL_Texture **assets_tiles, SDL_Texture **npc_texture,
+                 int *tileset_nb_x, int *tileset_nb_y)
 {
     int status = EXIT_FAILURE;
     
@@ -24,6 +26,14 @@ int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, SDL_Textu
         fprintf(stderr, "erreur IMG_LoadTexture() assets_tiles : %s\n", IMG_GetError());
         return status;
     }
+    SDL_Point bounds;
+    if(0 != SDL_QueryTexture(*assets_tiles, NULL, NULL, &bounds.x, &bounds.y))
+    {
+        fprintf(stderr, "error SDL_QueryTexture : %s\n", SDL_GetError());
+        return status;
+    }
+    *tileset_nb_x = bounds.x / 8;
+    *tileset_nb_y = bounds.y / 8;
     
     *npc_texture = IMG_LoadTexture(renderer, NPC_SPRITES_PNG);
     if(NULL == *npc_texture)
@@ -52,6 +62,7 @@ int destroyTextures(SDL_Texture **croute_texture, SDL_Texture **assets_tiles, SD
     status = EXIT_SUCCESS;
     return status;
 }
+
 
 int copieTextureSurRender(SDL_Renderer *renderer, SDL_Texture *texture,
                           int pos_x, int pos_y, SDL_Rect source, 
@@ -121,7 +132,7 @@ int initLevelTextures(SDL_Texture **level_main, SDL_Renderer *renderer, int nb_t
 }
 
 int loadLevelTiles(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *level_tiles_grid, 
-                              int nb_tuiles_x, int nb_tuiles_y, SDL_Renderer *renderer)
+                              int nb_tuiles_x, int nb_tuiles_y, SDL_Renderer *renderer, int tileset_nb_x, int tileset_nb_y)
 //remplit la texture dest_text avec les bonnes tuiles
 {
     SDL_Rect source;
@@ -143,9 +154,9 @@ int loadLevelTiles(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *leve
         {
             if( 0 != level_tiles_grid[i * nb_tuiles_x + j] )
             {
-                if(i==7 && j==7)
-                    printf("test\n");
-                if( 0!= selectLvlAssetsTile(level_tiles_grid[i * nb_tuiles_x + j], &source) )
+                //if(i==7 && j==7)
+                    //printf("test\n");
+                if( 0!= selectLvlAssetsTile(level_tiles_grid[i * nb_tuiles_x + j], &source, tileset_nb_x, tileset_nb_y) )
                     return EXIT_FAILURE;
                 if (0 != copieTextureSurRender(renderer, assets_tiles, j * TILE_SIZE, 
                     i * TILE_SIZE, source, SDL_FLIP_NONE, 1))
@@ -157,22 +168,22 @@ int loadLevelTiles(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *leve
     return EXIT_SUCCESS;
 }
 
-int selectLvlAssetsTile(int sprite_ID, SDL_Rect *source)
+int selectLvlAssetsTile(int sprite_ID, SDL_Rect *source, int tileset_nb_x, int tileset_nb_y)
 {
     int status = EXIT_FAILURE;
-    if (sprite_ID < 1 || sprite_ID > 160)
+    if (sprite_ID < 1 || sprite_ID > (tileset_nb_x * tileset_nb_y))
     {
         fprintf(stderr, "Erreur selectLvlAssetsTile() : sprite_ID valeur interdite (%d)\n", sprite_ID);
         return status;
     }
     //calcul de l'emplacement de la tile sur la texture
-    int ligne = sprite_ID / 8;
-    int colonne = sprite_ID % 8;
+    int ligne = sprite_ID / tileset_nb_x;
+    int colonne = sprite_ID % tileset_nb_x;
     colonne--;
     if(colonne < 0)
     {
         ligne--;
-        colonne = 7;
+        colonne = tileset_nb_x-1;
     }    
     source->x = colonne*TILE_SIZE;
     source->y = ligne*TILE_SIZE;

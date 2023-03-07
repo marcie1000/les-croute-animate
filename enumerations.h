@@ -24,7 +24,8 @@ enum speeds {
 };
 
 enum others {
-    PLAYER_COL_SHIFT = 5
+    PLAYER_COL_SHIFT = 5,
+    MAX_TILE_WALL = 36
 };
 
 enum player_requests {
@@ -83,6 +84,13 @@ enum interobj_types {
     IT_ENDWALL,
     IT_WALL,
     IT_COIN
+};
+
+enum special_actions {
+    SP_AC_NONE,
+    SP_AC_EARN_COIN,
+    SP_AC_HURT,
+    SP_AC_NPC_HURT
 };
 
 extern const char CROUTE_SPRITES_PNG[];

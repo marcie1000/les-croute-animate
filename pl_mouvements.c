@@ -35,7 +35,8 @@ void initPlayer(character *ch, bool initmoney)
         ch->money = 0;
 }
 
-bool CheckPlayerOnTheGround(int nb_objs, interobj *objs, character *player)
+bool CheckPlayerOnTheGround(int nb_objs, interobj *objs, character *player, int *main_tiles_grid, 
+                            int nb_tiles_x, int nb_tiles_y)
 //vérifie si le joueur a les pieds posés sur qqch
 {
     //the sides of the rectangles
@@ -47,8 +48,39 @@ bool CheckPlayerOnTheGround(int nb_objs, interobj *objs, character *player)
     leftA = player->obj.collider.x;
     rightA = player->obj.collider.x + player->obj.collider.w;
     bottomA = player->obj.collider.y + player->obj.collider.h;
-    //rectangle b
+    
+    //coresponding ground tiles
+    int subscripts[3]; /*= (pcat.y + pcat.h) * nb_tiles_x + pcat.x;*/
+    subscripts[0] = ((player->obj.collider.y + player->obj.collider.h)/TILE_SIZE)*nb_tiles_x + (player->obj.collider.x/TILE_SIZE) -1;
+    subscripts[1] = subscripts[0] + 1;
+    subscripts[2] = subscripts[1] + 1;
+    
+    SDL_Rect tilebnd;
+    tilebnd.w = TILE_SIZE;
+    tilebnd.h = TILE_SIZE;
+
+    for(int j = 0; j<3; j++)
+    {
+        //if the tile is one of the wall tiles
+        if(subscripts[j] < nb_tiles_x*nb_tiles_y &&
+           (main_tiles_grid[subscripts[j]] <= MAX_TILE_WALL) &&
+           (main_tiles_grid[subscripts[j]] > 0))
+        {
+            tilebnd.x = subscripts[j]%nb_tiles_x * TILE_SIZE;
+            tilebnd.y = subscripts[j]/nb_tiles_x * TILE_SIZE;
+            
+            topB = tilebnd.y;
+            leftB = tilebnd.x;
+            rightB = tilebnd.x + tilebnd.w;
+            //si il y a collision sur l'axe x et que le joueur touche le haut du collider
+            if( (leftA < rightB) && (rightA > leftB) && (bottomA == topB) )
+                return true;                
+        }     
+    }
+
+    //collisions with programmed objects
     //test de tous les colliders
+    
     for(int i=0; i<nb_objs; i++)
     {
         //si objet activé
@@ -68,10 +100,39 @@ bool CheckPlayerOnTheGround(int nb_objs, interobj *objs, character *player)
     return false;
 }
 
-bool playerFall(int nb_objs, interobj *objs, character *player, int frame_fall, bool *bump_soundflag)
+bool CheckPlayerJumpOnObj(interobj obj, character *player)
+//vérifie si le joueur a les pieds posés sur qqch
+{    
+    //the sides of the rectangles
+    int leftB, rightB, topB;
+    int leftA, rightA, bottomA;
+    
+    //assignations aux valeurs des rectangles
+    //rectangle obj_col
+    leftA = player->obj.collider.x;
+    rightA = player->obj.collider.x + player->obj.collider.w;
+    bottomA = player->obj.collider.y + player->obj.collider.h;
+    //rectangle b
+    //test de tous les colliders
+    //si objet activé
+    if(!obj.enabled)
+        return false;
+        
+    topB = obj.collider.y;
+    leftB = obj.collider.x;
+    rightB = obj.collider.x + obj.collider.w;
+    //si il y a collision sur l'axe x et que le joueur touche le haut du collider
+    if( (leftA < rightB) && (rightA > leftB) && (bottomA - topB > 0) && (bottomA - topB <=5) )
+        return true;
+    
+    return false;
+}
+
+bool playerFall(int nb_objs, interobj *objs, character *player, int frame_fall, bool *bump_soundflag, 
+                int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y)
 {
     *bump_soundflag = false;
-    bool on_the_ground = CheckPlayerOnTheGround(nb_objs, objs, player);
+    bool on_the_ground = CheckPlayerOnTheGround(nb_objs, objs, player, main_tiles_grid, nb_tiles_x, nb_tiles_y);
     //update position si le joueur n'a pas les pieds sur le sol
     int vitesse;
     if(!on_the_ground)
@@ -87,7 +148,7 @@ bool playerFall(int nb_objs, interobj *objs, character *player, int frame_fall, 
     {
         player->obj.position.y ++;
         player->obj.collider.y ++;
-        on_the_ground = CheckPlayerOnTheGround(nb_objs, objs, player);
+        on_the_ground = CheckPlayerOnTheGround(nb_objs, objs, player, main_tiles_grid, nb_tiles_x, nb_tiles_y);
         //si vient de toucher le sol
         if(on_the_ground)
             *bump_soundflag = true;
@@ -276,7 +337,8 @@ bool checkAllEndwallCollisions(SDL_Rect a, int nb_objs, interobj *objs, int cam_
     return false;
 }
 
-bool updatePositionJump(int nb_objs, interobj *objs, character *player, int frame_jump, bool *hurt_soundflag)
+bool updatePositionJump(int nb_objs, interobj *objs, character *player, int frame_jump, bool *hurt_soundflag,
+                        int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y)
 {
     *hurt_soundflag = false;
     flpoint pos_init = player->obj.position;
@@ -290,9 +352,36 @@ bool updatePositionJump(int nb_objs, interobj *objs, character *player, int fram
 
     player->obj.position.y -= vitesse;
     
+    
+    //======= collision tests with the ID of the tiles only ============
+    //player collider as tiles position:
+    SDL_Rect pcat;
+    pcat.x = player->obj.collider.x / 8;
+    pcat.y = player->obj.collider.y / 8;
+    //w and h are equal to 0 if the edge of the player collider isn't aligned with the tiles grid:
+//    pcat.w = abs(((player->obj.collider.x + player->obj.collider.w) / 8) - pcat.x);
+//    pcat.h = abs(((player->obj.collider.y + player->obj.collider.h) / 8) - pcat.y);
+
+    //test of all positions between 0 and vitesse
     for(int i=0; i<vitesse; i++)
     {
         player->obj.collider.y --;
+        pcat.y = player->obj.collider.y / 8;
+        
+        //coresponding ground tile
+        int subscript = pcat.y* nb_tiles_x + pcat.x;
+        //if the tile is one of the wall tiles
+        if(subscript < nb_tiles_x*nb_tiles_y)
+        {
+            if ((main_tiles_grid[subscript] <= MAX_TILE_WALL) && (main_tiles_grid[subscript] > 0) )
+            {
+                player->obj.collider.y = col_init.y - i;
+                player->obj.position.y = pos_init.y - i;
+                *hurt_soundflag = true;
+                return false;
+            }
+        }      
+      
         if( checkAllCollisions(player->obj.collider, nb_objs, objs, REQ_JUMP) )
         {
             player->obj.collider.y = col_init.y - i;
@@ -320,7 +409,8 @@ int updatePositionCam(int nb_objs, interobj *objs, cam *camera, int cam_leftRigh
     return 0;
 }
 
-bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_down, int left_right)
+bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_down, int left_right, 
+                        int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y)
 {
     int requete;
     if (left_right < 0)
@@ -331,17 +421,81 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
         return 0;
     float deplacement = left_right * player_speed;
     bool col = false;
-    
+    //reach end of level
+    bool reach_end = false;
     SDL_Rect coll_tmp = player->obj.collider; //ne change pas encore
     flpoint pos_tmp = player->obj.position;
     pos_tmp.x += deplacement; //change ici
-    
-    //test de collision pour chaque position comprise dans [0; |deplacement|]
+    int x_max = nb_tiles_x * TILE_SIZE;
+
     for (int i=0; i <= fabs(deplacement); i++)
     {
         coll_tmp.x += i*left_right;
+
+        /*         
+         * here 0 *-=========
+         *          |   |   |
+         * here 1 *_|   |   |
+         *          =========    <- the player sprite (squares represents tile size)
+         *          |   |   |
+         * here 2 *_|   |   |
+         *          =========
+         *   the four subscripts point 
+         * 
+         */
+        //coresponding ground tiles
+        int subscripts[3]; /*= (pcat.y + pcat.h) * nb_tiles_x + pcat.x;*/
+        int w=-1;
+        if(requete == REQ_DIR_RIGHT) 
+        {
+            w=(coll_tmp.w/TILE_SIZE);
+            if(w==0) w=1;
+        }
+        subscripts[0] = (coll_tmp.y/TILE_SIZE)*nb_tiles_x + (coll_tmp.x/TILE_SIZE) + w;
+        subscripts[1] = ( (coll_tmp.y + TILE_SIZE -1) /TILE_SIZE )*nb_tiles_x + (coll_tmp.x/TILE_SIZE) + w;
+        subscripts[2] = ( (coll_tmp.y + TILE_SIZE -1) /TILE_SIZE + 1)*nb_tiles_x + (coll_tmp.x/TILE_SIZE) + w;
+        
+        SDL_Rect tilebnd;
+        tilebnd.w = TILE_SIZE;
+        tilebnd.h = TILE_SIZE;
+
+        for(int j = 0; j<3; j++)
+        {
+            //if the tile is one of the wall tiles
+            if(subscripts[j] < nb_tiles_x*nb_tiles_y)
+            {
+                if(requete == REQ_DIR_LEFT)
+                    tilebnd.x = coll_tmp.x - TILE_SIZE;
+                else
+                    tilebnd.x = (coll_tmp.x + coll_tmp.w);
+                tilebnd.x -= tilebnd.x % TILE_SIZE;
+                tilebnd.y = (subscripts[j] / nb_tiles_x + 1*(subscripts[j]!=0)) * TILE_SIZE;
+                
+                int dir;
+                if(requete == REQ_DIR_LEFT) dir = -1;
+                else dir = +1;
+                if(main_tiles_grid[subscripts[j]] <= 0 || main_tiles_grid[subscripts[j]] > MAX_TILE_WALL)
+                    continue;
+                if (checkCollisionX(coll_tmp, tilebnd, dir))
+                {
+                    //rabaisse à la dernière position possible
+                    pos_tmp.x = player->obj.position.x + i*left_right;
+                    //on utilise position comme base car si player_speed n'est pas
+                    //entière cela causerait un décalage entre la position
+                    //du collider (entière) et la position flottante du joueur
+                    coll_tmp.x = player->obj.position.x + i*left_right;
+                    col = true;
+                    break; //sort de la boucle
+                }
+            }     
+        }
+        
+        if(col) break;
+
         col = checkAllCollisions(coll_tmp, nb_objs, objs, requete);
-        if (col)
+        reach_end = (coll_tmp.x <= 0 && left_right == -1) ||
+                     (coll_tmp.x + coll_tmp.w >= x_max && left_right == +1);
+        if (col || reach_end)
         {
             //rabaisse à la dernière position possible
             pos_tmp.x = player->obj.position.x + i*left_right;
@@ -360,24 +514,37 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
     player->obj.position.x = pos_tmp.x;
     player->obj.collider.x = coll_tmp.x;
     
+//    if(col)
+//    {
+//        printf("updatePositionWalk %d : %d,%d,%d,%d, ", !col, pcat.x, pcat.y, pcat.w, pcat.h);
+//        printf("sub=%d, main_tiles_grid[subscript]=%d\n", subscript, main_tiles_grid[subscript]);
+//        printf("COLLIDER %d,%d,%d,%d\n", player->obj.collider.x, player->obj.collider.y, player->obj.collider.w, player->obj.collider.h);
+//    }
+    
     return !col;
     
 }
 
-bool checkCollisionSpecialEffect(int nb_objs, interobj **objs, int nb_npcs, character **npcs,
+int checkCollisionSpecialAction(int nb_objs, interobj **objs, int nb_npcs, character **npcs,
                                  character *player, int **level_tiles_grid, int nbtuilesX, int *type)
 {
     bool col = false;
     
     for(int i = 0; i<nb_npcs; i++)
     {
+        if(CheckPlayerJumpOnObj((*npcs)[i].obj, player))
+        {
+            (*npcs)[i].obj.pdv -= player->puissance;
+            if((*npcs)[i].obj.pdv == 0) (*npcs)[i].obj.enabled = false;
+            return SP_AC_NPC_HURT;
+        }
         if( ( (*npcs)[i].obj.enabled ) && ( (*npcs)[i].obj.type == NPC_SANGLIER ) )
             col = checkCollision(player->obj.collider, (*npcs)[i].obj.collider);
         if(col)
         {
             *type = NPC_SANGLIER;
             player->obj.pdv -= (*npcs)[i].puissance;
-            return col;
+            return SP_AC_HURT;
         }
     }
     
@@ -387,15 +554,15 @@ bool checkCollisionSpecialEffect(int nb_objs, interobj **objs, int nb_npcs, char
             col = checkCollision(player->obj.collider, (*objs)[i].collider);
         if(col)
         {
-            objCollisionSpecialEffects(i, objs, player, level_tiles_grid, nbtuilesX);
+            objCollisionSpecialActions(i, objs, player, level_tiles_grid, nbtuilesX);
             *type = IT_COIN;
-            return col;
+            return SP_AC_EARN_COIN;
         }
     }
-    return col;
+    return SP_AC_NONE;
 }
 
-void objCollisionSpecialEffects(int id_obj, interobj **objs, character *player, int **level_tiles_grid, int nbtuilesX)
+void objCollisionSpecialActions(int id_obj, interobj **objs, character *player, int **level_tiles_grid, int nbtuilesX)
 {
     int posX = (*objs)[id_obj].position.x;
     int posY = (*objs)[id_obj].position.y;

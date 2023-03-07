@@ -42,7 +42,10 @@ int main(int argc, char *argv[])
     SDL_Texture *croute_texture = NULL; //contient les sprites du perso principal
     SDL_Texture *npc_texture = NULL; //sprites des NPCs
     SDL_Texture *assets_tiles = NULL; //contient les sprites du décor etc
-    SDL_Texture *level_main = NULL; //contient le décor principal du niveau (au niveau du joueur)
+    SDL_Texture *level_main_layer = NULL; //contient le décor principal du niveau (au niveau du joueur)
+    SDL_Texture *level_overlay = NULL;
+    
+    int tileset_nb_x, tileset_nb_y;
     
     cam camera = {
         {0,0,NB_SPRITES_X*SPRITE_SIZE,NB_SPRITES_Y*SPRITE_SIZE},
@@ -61,7 +64,7 @@ int main(int argc, char *argv[])
     
     if (0 != initSDL(&main_renderer, &main_window))
         goto SDL_Cleanup;
-    if (0 != initTextures(main_renderer, &croute_texture, &assets_tiles, &npc_texture))
+    if (0 != initTextures(main_renderer, &croute_texture, &assets_tiles, &npc_texture, &tileset_nb_x, &tileset_nb_y))
         goto SDL_Cleanup;
     //charge les fichiers audio
     loadAudio(&jump, &hurt, &bump, &coin);
@@ -86,15 +89,45 @@ int main(int argc, char *argv[])
     
     //===================
     //LEVEL
-    int *level_tiles_grid = malloc(sizeof(int[10][10]));
-    character *npcs = malloc(sizeof(character));
-    interobj *objs = malloc(sizeof(interobj));
+    int *main_tiles_grid = NULL;
+    int *overlay_tiles_grid = NULL;
+    character *npcs = NULL;
+    interobj *objs = NULL;
+    main_tiles_grid = malloc(sizeof(int[10][10]));
+    if(NULL == main_tiles_grid)
+    {
+        fprintf(stderr, "Error malloc main_tiles_grid in fct main.\n");
+        goto Quit;
+    }
+    overlay_tiles_grid = malloc(sizeof(int[10][10]));
+    if(NULL == overlay_tiles_grid)
+    {
+        fprintf(stderr, "Error malloc overlay_tiles_grid in fct main.\n");
+        goto Quit;
+    }
+    npcs = malloc(sizeof(character));
+    if(NULL == npcs)
+    {
+        fprintf(stderr, "Error malloc npcs in fct main.\n");
+        goto Quit;
+    }
+    objs = malloc(sizeof(interobj));
+    if(NULL == objs)
+    {
+        fprintf(stderr, "Error malloc objs in fct main.\n");
+        goto Quit;
+    }    
     int nb_tuiles_x, nb_tuiles_y, nb_objs, nb_npcs;
-    if ( 0 != loadLevel(LEVEL_1_FILENAME, &nb_tuiles_x, &nb_tuiles_y, &level_tiles_grid, &objs, &nb_objs, &npcs, &nb_npcs) )
+    if ( 0 != loadLevel(LEVEL_1_FILENAME, &nb_tuiles_x, &nb_tuiles_y, &main_tiles_grid, &overlay_tiles_grid,
+                        &objs, &nb_objs, &npcs, &nb_npcs) )
         goto Quit;
     initNPCs(&npcs, nb_npcs);
-    initLevelTextures(&level_main, main_renderer, nb_tuiles_x, nb_tuiles_y);
-    loadLevelTiles(&level_main, assets_tiles, level_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer);
+    initLevelTextures(&level_main_layer, main_renderer, nb_tuiles_x, nb_tuiles_y);
+    loadLevelTiles(&level_main_layer, assets_tiles, main_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer,
+                   tileset_nb_x, tileset_nb_y);
+    initLevelTextures(&level_overlay, main_renderer, nb_tuiles_x, nb_tuiles_y);
+    loadLevelTiles(&level_overlay, assets_tiles, overlay_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer,
+                   tileset_nb_x, tileset_nb_y);
     
     
 
@@ -105,6 +138,7 @@ int main(int argc, char *argv[])
     //event loop
     while (!quit)
     {
+        //printf("%f, %f\n", player.obj.position.x, player.obj.position.y);
         while(SDL_PollEvent(&e) != 0)
         {
             fonctionSwitchEvent(e, &requete, &left_right, &up_down, &jump_ended /*, &cam_leftRight*/);
@@ -148,13 +182,15 @@ int main(int argc, char *argv[])
             if(npcs[i].jumping)
             {
                 //change la position du personnage et renvoie true jusqu'à la fin du saut
-                npcs[i].jumping = updatePositionJump(nb_objs, objs, &npcs[i], npcs[i].frame_jump, &hurt_soundflag);
+                npcs[i].jumping = updatePositionJump(nb_objs, objs, &npcs[i], npcs[i].frame_jump, &hurt_soundflag,
+                                                     main_tiles_grid, nb_tuiles_x, nb_tuiles_y);
                 //next frame jump
                 npcs[i].frame_jump++;
             }
             else
             {
-                npcs[i].falling = playerFall(nb_objs, objs, &npcs[i], npcs[i].frame_fall, &bump_soundflag);
+                npcs[i].falling = playerFall(nb_objs, objs, &npcs[i], npcs[i].frame_fall, &bump_soundflag,
+                                             main_tiles_grid, nb_tuiles_x, nb_tuiles_y);
                 if(npcs[i].falling)
                 {
                     npcs[i].frame_jump = 0;
@@ -172,7 +208,8 @@ int main(int argc, char *argv[])
                 else
                     npc_left_right = +1;
                 //change la position du personnage si on marche
-                npc_moved = updatePositionWalk(nb_objs, objs, &npcs[i], up_down, npc_left_right);
+                npc_moved = updatePositionWalk(nb_objs, objs, &npcs[i], up_down, npc_left_right,
+                                               main_tiles_grid, nb_tuiles_x, nb_tuiles_y);
                 //go to next npcs[i].frame_walk
                 npcs[i].frame_walk++;
                 //inverse la direction si mur rencontré
@@ -195,13 +232,15 @@ int main(int argc, char *argv[])
         if(player.jumping)
         {
             //change la position du personnage et renvoie true jusqu'à la fin du saut
-            player.jumping = updatePositionJump(nb_objs, objs, &player, player.frame_jump, &hurt_soundflag);
+            player.jumping = updatePositionJump(nb_objs, objs, &player, player.frame_jump, &hurt_soundflag,
+                                                main_tiles_grid, nb_tuiles_x, nb_tuiles_y);
             //next frame jump
             player.frame_jump++;
         }
         else
         {
-            player.falling = playerFall(nb_objs, objs, &player, player.frame_fall, &bump_soundflag);
+            player.falling = playerFall(nb_objs, objs, &player, player.frame_fall, &bump_soundflag, 
+                                        main_tiles_grid, nb_tuiles_x, nb_tuiles_y);
             if(player.falling)
             {
                 player.frame_jump = 0;
@@ -214,18 +253,21 @@ int main(int argc, char *argv[])
         if(player.walking)
         {
             //change la position du personnage si on marche
-            player_moved = updatePositionWalk(nb_objs, objs, &player, up_down, left_right);
+            player_moved = updatePositionWalk(nb_objs, objs, &player, up_down, left_right, 
+                                              main_tiles_grid, nb_tuiles_x, nb_tuiles_y);
             player.obj.collider.x = player.obj.position.x + PLAYER_COL_SHIFT;
             //go to next player.frame_walk
             player.frame_walk++;
         }
         
         //RECHERCHE D'ÉVÉNEMENTS LIÉS À LA RENCONTRE D'OBJETS SPÉCIAUX
-        if(checkCollisionSpecialEffect(nb_objs, &objs, nb_npcs, &npcs, &player, &level_tiles_grid, nb_tuiles_x, &obj_type))
+        int sp_act = checkCollisionSpecialAction(nb_objs, &objs, nb_npcs, &npcs, &player, &main_tiles_grid, nb_tuiles_x, &obj_type);
+        if(sp_act)
         {
             if(obj_type == IT_COIN)
             {
-                loadLevelTiles(&level_main, assets_tiles, level_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer);
+                loadLevelTiles(&level_main_layer, assets_tiles, main_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer,
+                               tileset_nb_x, tileset_nb_y);
                 Mix_PlayChannel(-1, coin, 0);
             }
             else if (obj_type == NPC_SANGLIER)
@@ -243,6 +285,23 @@ int main(int argc, char *argv[])
             {
                 camera.moving = true;
                 cam_leftRight = left_right;
+                
+                //dépassement des limites de déplacement caméra
+                int x_max = nb_tuiles_x * TILE_SIZE;
+                if(cam_leftRight == -1 && camera.absCoord.x <= 0)
+                {
+                    camera.absCoord.x = 0;
+                    camera.texLoadSrc.x = 0;
+                    camera.moving = false;
+                    cam_leftRight = 0;
+                }
+                else if((cam_leftRight == +1) && (camera.absCoord.x + camera.absCoord.w >= x_max))
+                {
+                    camera.absCoord.x = x_max - camera.absCoord.w;
+                    camera.texLoadSrc.x = x_max - camera.texLoadSrc.w;
+                    camera.moving = false;
+                    cam_leftRight = 0;
+                }
             }
         }
         else
@@ -283,7 +342,8 @@ int main(int argc, char *argv[])
         //RENDER======================
         //render level
         SDL_SetRenderTarget(main_renderer, NULL);
-        copieTextureSurRender(main_renderer, level_main, 0, 0, camera.texLoadSrc, SDL_FLIP_NONE, WIN_SCALE);
+        copieTextureSurRender(main_renderer, level_main_layer, 0, 0, camera.texLoadSrc, SDL_FLIP_NONE, WIN_SCALE);
+        copieTextureSurRender(main_renderer, level_overlay, 0, 0, camera.texLoadSrc, SDL_FLIP_NONE, WIN_SCALE);
 
         //affichage des npcs
         for(int i=0; i<nb_npcs; i++)
@@ -311,7 +371,7 @@ int main(int argc, char *argv[])
 
     status = EXIT_SUCCESS;
 Quit:
-    free(level_tiles_grid);
+    free(main_tiles_grid);
     free(npcs);
     free(objs);
 SDL_Cleanup:
@@ -323,7 +383,9 @@ SDL_Cleanup:
         Mix_FreeChunk(bump);
     if(NULL != coin)
         Mix_FreeChunk(coin);
-    destroyTextures(&croute_texture, &assets_tiles, &level_main, &npc_texture);
+    if(NULL != level_overlay)
+        SDL_DestroyTexture(level_overlay);
+    destroyTextures(&croute_texture, &assets_tiles, &level_main_layer, &npc_texture);
     quitSDL(&main_renderer, &main_window);
     
     return status;
