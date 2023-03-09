@@ -12,7 +12,7 @@ enum window_parameters {
     NB_TILES_Y = NB_SPRITES_Y * 2,
     NATIVE_WIDTH = SPRITE_SIZE * NB_SPRITES_X, 
     NATIVE_HEIGHT = SPRITE_SIZE * NB_SPRITES_Y,
-    WIN_SCALE = 6,
+    WIN_SCALE = 4,
     TEXTURE_TILES_SHIFTSIZE_X = 8 //en mini sprites
 };
 
@@ -94,11 +94,19 @@ enum items_tiles {
 };
 
 //SPECIAL ACTIONS
-#define SP_AC_NONE          (0U)
-#define SP_AC_EARN_COIN     (1U)
-#define SP_AC_EARN_HEART    (2U)
-#define SP_AC_HURT          (4U)
-#define SP_AC_NPC_HURT      (8U)
+#define SP_AC_NONE          (0U     )
+#define SP_AC_EARN_COIN     (1U << 0)
+#define SP_AC_EARN_HEART    (1U << 1)
+#define SP_AC_HURT          (1U << 2)
+#define SP_AC_NPC_HURT      (1U << 3)
+
+//CHARACTER STATES
+#define CH_STATE_NONE       (0U     )
+#define CH_STATE_WALKING    (1U << 0)
+#define CH_STATE_FALLING    (1U << 1)
+#define CH_STATE_JUMPING    (1U << 2)
+#define CH_STATE_HURT       (1U << 3)
+#define CH_STATE_MOVED      (1U << 4)
 
 extern const char CROUTE_SPRITES_PNG[];
 extern const char ASSETS_TILES_PNG[];

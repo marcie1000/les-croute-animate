@@ -15,9 +15,10 @@ void initNPCs(character **npcs, int nb_npcs)
         (*npcs)[i].obj.position.x *= TILE_SIZE;
         (*npcs)[i].obj.position.y *= TILE_SIZE;
         (*npcs)[i].puissance = 1;
-        (*npcs)[i].walking = true;
-        (*npcs)[i].jumping = false;
-        (*npcs)[i].falling = false;
+//        (*npcs)[i].walking = true;
+//        (*npcs)[i].jumping = false;
+//        (*npcs)[i].falling = false;
+        (*npcs)[i].state = CH_STATE_WALKING;
         (*npcs)[i].frame_walk = 0;
         (*npcs)[i].frame_jump = 0;
         (*npcs)[i].frame_fall = 0;

@@ -7,6 +7,7 @@
 #include "pl_mouvements.h"
 #include "enumerations.h"
 #include "types_struct_defs.h"
+#include "anim.h"
 //#include "textures_fx.h"
 
 void initPlayer(character *ch, bool initmoney)
@@ -23,12 +24,16 @@ void initPlayer(character *ch, bool initmoney)
     
     ch->obj.pdv = 1;
     ch->puissance = 1;
-    ch->walking = false;
+    /*ch->walking = false;
     ch->jumping = false;
-    ch->falling = false;
+    ch->falling = false;*/
+    
+    ch->state = CH_STATE_NONE;
+    
     ch->frame_walk = 0;
     ch->frame_jump = 0;
     ch->frame_fall = 0;
+    ch->frame_hurt = 0;
     ch->obj.direction = REQ_DIR_DOWN;
     ch->obj.enabled = true;
     if(initmoney)
@@ -537,23 +542,26 @@ int checkCollisionSpecialAction(int nb_objs, interobj **objs, int nb_npcs, chara
                                 int nb_tiles_x, int nb_tiles_y, int *type)
 {
     unsigned sp_act = SP_AC_NONE;
-    bool col = false;
+    //bool col = false;
     
     for(int i = 0; i<nb_npcs; i++)
     {
-        if(CheckPlayerJumpOnObj((*npcs)[i].obj, player))
+        if((player->state & CH_STATE_FALLING) && (CheckPlayerJumpOnObj((*npcs)[i].obj, player)))
         {
             (*npcs)[i].obj.pdv -= player->puissance;
             if((*npcs)[i].obj.pdv == 0) (*npcs)[i].obj.enabled = false;
             sp_act |= SP_AC_NPC_HURT;
         }
-        if( ( (*npcs)[i].obj.enabled ) && ( (*npcs)[i].obj.type == NPC_SANGLIER ) )
-            col = checkCollision(player->obj.collider, (*npcs)[i].obj.collider);
-        if(col)
+        if( ( (*npcs)[i].obj.enabled ) && ( (*npcs)[i].obj.type == NPC_SANGLIER ) &&
+           !(player->state & CH_STATE_HURT) )
         {
-            *type = NPC_SANGLIER;
-            player->obj.pdv -= (*npcs)[i].puissance;
-            sp_act |= SP_AC_HURT;
+            if(checkCollision(player->obj.collider, (*npcs)[i].obj.collider))
+            {
+                *type = NPC_SANGLIER;
+                player->obj.pdv -= (*npcs)[i].puissance;
+                sp_act |= SP_AC_HURT;
+                player->state |= CH_STATE_HURT;
+            }
         }
     }
     

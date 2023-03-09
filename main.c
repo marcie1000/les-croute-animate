@@ -153,17 +153,14 @@ int main(int argc, char *argv[])
         }
 
         //commence le saut
-        if(requete == REQ_JUMP && jump_ended && (player.frame_jump == 0) && !player.falling)
+        if(requete == REQ_JUMP && jump_ended && (player.frame_jump == 0) && !(player.state & CH_STATE_FALLING))
         {
             jump_ended = false;
-            player.jumping = true;
+            player.state |= CH_STATE_JUMPING;
             Mix_PlayChannel(0, jump, 0);
         }
         //définit si l'on est ou non en mouvement
-        if((up_down != 0) || (left_right != 0))
-            player.walking = true;
-        else
-            player.walking = false;
+        flag_assign(&player.state, CH_STATE_WALKING, ((up_down != 0) || (left_right != 0)) );
         
         //idem pour la cam
         if(cam_leftRight != 0)
@@ -180,9 +177,8 @@ int main(int argc, char *argv[])
                  nb_tuiles_x, nb_tuiles_y, &hurt_soundflag, &bump_soundflag);
         
         //ACTUALISATIONS POSITION PERSONNAGE ================================================
-        bool player_moved=false;
         anim_main_character(nb_objs, &player, objs, main_tiles_grid, nb_tuiles_x, nb_tuiles_y, &hurt_soundflag, &bump_soundflag,
-                            &player_moved, up_down, left_right);
+                            up_down, left_right);
         
         //RECHERCHE D'ÉVÉNEMENTS LIÉS À LA RENCONTRE D'OBJETS SPÉCIAUX
         unsigned sp_act = checkCollisionSpecialAction(nb_objs, &objs, nb_npcs, &npcs, &player, 
@@ -203,7 +199,7 @@ int main(int argc, char *argv[])
         
 
         //MOUVEMENT AUTO DE LA CAMÉRA :
-        anim_camera(player, &camera, player_moved, left_right, nb_tuiles_x, &cam_leftRight);
+        anim_camera(player, &camera, left_right, nb_tuiles_x, &cam_leftRight);
         
         //SOUNDFLAGS
         if(hurt_soundflag)
@@ -237,15 +233,28 @@ int main(int argc, char *argv[])
         {
             if(npcs[i].obj.enabled)
             {
-                spriteID = choseNPCSprite(npcs[i].obj.direction, npcs[i].walking, npcs[i].frame_walk/NPC_ANIM_FRAME_LENGHT, &flip);
-                loadNPCSprite(main_renderer, npc_texture, npcs[i].obj.position.x-camera.texLoadSrc.x, npcs[i].obj.position.y, spriteID, flip);        
+                spriteID = choseNPCSprite(npcs[i].obj.direction, npcs[i].state & CH_STATE_WALKING,
+                                          npcs[i].frame_walk/NPC_ANIM_FRAME_LENGHT, &flip);
+                loadNPCSprite(main_renderer, npc_texture, npcs[i].obj.position.x-camera.texLoadSrc.x, 
+                              npcs[i].obj.position.y, spriteID, flip);        
             }
         }
         
         //donne le bon identifiant de sprite en fonction des 3 paramètres
-        spriteID = chosePlayerSprite(player.obj.direction, player.walking, player.obj.type, player.frame_walk/DEFAULT_ANIM_FRAMES, &flip);
+        spriteID = chosePlayerSprite(player.obj.direction, player.state & CH_STATE_WALKING,
+                                     player.obj.type, player.frame_walk/DEFAULT_ANIM_FRAMES, &flip);
+        
+        //player blinks if hurt
+        static bool pl_blink = false; //if true : player disapears (used when hurt)
+        if(!(player.state & CH_STATE_HURT)) pl_blink = false;
+        else
+        {
+            if(player.frame_hurt % 4 == 3) pl_blink = !pl_blink;
+        }
         //charge la texture du perso dans le renderer
-        loadPlayerSprite(main_renderer, croute_texture, player.obj.position.x-camera.texLoadSrc.x, player.obj.position.y, spriteID, flip);   
+        if(!pl_blink)
+            loadPlayerSprite(main_renderer, croute_texture, player.obj.position.x-camera.texLoadSrc.x, 
+                             player.obj.position.y, spriteID, flip);   
 
         HUD_update(main_renderer, &hud, assets_tiles, tileset_nb_x, tileset_nb_y, player);
         copieTextureSurRender(main_renderer, hud, 0, 0, RECT_NULL, SDL_FLIP_NONE, WIN_SCALE);
@@ -255,7 +264,7 @@ int main(int argc, char *argv[])
         //cycle animation
         if((player.frame_walk/DEFAULT_ANIM_FRAMES) >= WALKING_ANIMATION_FRAMES)
             player.frame_walk = 0;
-        if(!player.jumping)
+        if(!(player.state & CH_STATE_JUMPING))
             player.frame_jump = 0;
     }
 

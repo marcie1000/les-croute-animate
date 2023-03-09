@@ -22,12 +22,11 @@ typedef struct character_struct { //pour tout ce qui bouge : joueur, NPC
     interobj obj;
     int puissance;
     int money;
-    bool walking;
-    bool jumping;
-    bool falling;
+    unsigned state;
     int frame_jump;
     int frame_fall;
     int frame_walk;
+    int frame_hurt;
 }character;
 
 typedef struct character_struct character;
