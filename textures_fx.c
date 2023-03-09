@@ -3,13 +3,20 @@
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "textures_fx.h"
 #include "enumerations.h"
+#include "types_struct_defs.h"
 
+static text_format hud_tf = {
+    TTF_FONT_FILENAME,
+    16,
+    (SDL_Color){0,0,0,255}
+};
 
 int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, SDL_Texture **assets_tiles, SDL_Texture **npc_texture,
-                 int *tileset_nb_x, int *tileset_nb_y)
+                 SDL_Texture **hud, int *tileset_nb_x, int *tileset_nb_y)
 {
     int status = EXIT_FAILURE;
     
@@ -41,6 +48,16 @@ int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, SDL_Textu
         fprintf(stderr, "erreur IMG_LoadTexture() npc_texture : %s\n", IMG_GetError());
         return status;
     }
+    
+    *hud = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET,
+                             NB_TILES_X * TILE_SIZE, 2 * TILE_SIZE);
+    if(NULL == *hud)
+    {
+        fprintf(stderr, "error SDL_CreateTexture in function HUD_iinit: %s\n", SDL_GetError());
+        return EXIT_FAILURE;
+    }
+    SDL_SetTextureBlendMode(*hud, SDL_BLENDMODE_BLEND);
+
     
     status = EXIT_SUCCESS;
     return status;
@@ -129,6 +146,96 @@ int initLevelTextures(SDL_Texture **level_main, SDL_Renderer *renderer, int nb_t
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
+}
+
+
+int HUD_update(SDL_Renderer *renderer, SDL_Texture **hud, SDL_Texture *assets_tiles,
+               int ts_nb_x, int ts_nb_y, character player)
+{
+    static int money;
+    static int life;
+    bool changes = true;
+    
+    if(money != player.money)
+    {
+        changes = true;
+        money = player.money;
+    }
+    else if(life != player.obj.pdv)
+    {
+        changes = true;
+        life = player.obj.pdv;
+    }
+    else 
+        changes = false;
+    
+    if(changes)
+    {
+        SDL_SetRenderTarget(renderer, *hud);
+        SDL_SetRenderDrawColor(renderer, 0,0,0,0);
+        SDL_RenderClear(renderer);
+        
+        int posX = 1; 
+        
+        //coin
+        SDL_Rect src;
+        selectLvlAssetsTile(ITEM_COIN, &src, ts_nb_x, ts_nb_y);
+        copieTextureSurRender(renderer, assets_tiles, posX, 2, src, SDL_FLIP_NONE, 1);
+        //SDL_SetRenderTarget(renderer, NULL);
+        
+        char buf[50];
+        sprintf(buf, "%d", player.money);
+        SDL_Texture *tmp = createText(hud_tf, buf, renderer);
+        if(NULL == tmp)
+            return EXIT_FAILURE;
+        posX += 3+TILE_SIZE;
+        copieTextureSurRender(renderer, tmp, posX, -1, RECT_NULL, SDL_FLIP_NONE, 1);
+        SDL_DestroyTexture(tmp);
+        
+        //life
+        posX += 2*TILE_SIZE;
+        for(int i = 1; i<=PLAYER_MAX_LIFE; i++)
+        {
+            if(player.obj.pdv >= i)
+                selectLvlAssetsTile(ITEM_HEART, &src, ts_nb_x, ts_nb_y);
+            else
+                selectLvlAssetsTile(ITEM_EMPTY_HEART, &src, ts_nb_x, ts_nb_y);
+            copieTextureSurRender(renderer, assets_tiles, posX, 2, src, SDL_FLIP_NONE, 1);
+            posX += TILE_SIZE + 1;
+        }
+        
+        SDL_SetRenderTarget(renderer, NULL);
+    }
+    
+    return 0;
+}
+
+SDL_Texture *createText(text_format tf, const char *string, SDL_Renderer *ren)
+{
+    TTF_Font *font = NULL;
+    SDL_Surface *surface = NULL;
+    SDL_Texture *texture = NULL;
+    font = TTF_OpenFont(tf.file, tf.size);
+    if (NULL == font)
+    {
+        fprintf(stderr, "Erreur TTF_OpenFont : %s", TTF_GetError());
+        return NULL;
+    }
+    surface = TTF_RenderUTF8_Blended(font, string, tf.color);
+    TTF_CloseFont(font);
+    if (NULL == surface)
+    {
+        fprintf(stderr, "Erreur TTF_RenderUTF8_Blended : %s", TTF_GetError());
+        return NULL;
+    }
+    texture = SDL_CreateTextureFromSurface(ren, surface);
+    SDL_FreeSurface(surface);
+    if (NULL == texture)
+    {
+        fprintf(stderr, "Erreur SDL_CreateTextureFromSurface : %s", SDL_GetError());
+        return NULL;
+    }
+    return texture;
 }
 
 int loadLevelTiles(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *level_tiles_grid, 
@@ -291,3 +398,4 @@ int loadNPCSprite(SDL_Renderer *renderer, SDL_Texture *npc_texture,
     status = EXIT_SUCCESS;
     return status;
 }
+

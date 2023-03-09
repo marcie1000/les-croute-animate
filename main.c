@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "enumerations.h"
 #include "fichiers.h"
@@ -12,6 +13,7 @@
 #include "textures_fx.h"
 #include "audio.h"
 #include "npc.h"
+#include "anim.h"
 
 //constantes
 const char CROUTE_SPRITES_PNG[] = "images/croute_sprites.png";
@@ -22,6 +24,7 @@ const char AUDIO_FILE_HURT[] = "sounds/Hurt.wav";
 const char AUDIO_FILE_BUMP[] = "sounds/Bump.wav";
 const char AUDIO_FILE_COIN[] = "sounds/Coin.wav";
 const char LEVEL_1_FILENAME[] = "levels/niveau1_builder.csv";
+const char TTF_FONT_FILENAME[] = "m5x7.ttf";
 const float player_speed = 1;
 const float gravity = 0.35; //default 0.35
 const float jump_init_speed = 5.5; //default 5.5
@@ -44,6 +47,7 @@ int main(int argc, char *argv[])
     SDL_Texture *assets_tiles = NULL; //contient les sprites du décor etc
     SDL_Texture *level_main_layer = NULL; //contient le décor principal du niveau (au niveau du joueur)
     SDL_Texture *level_overlay = NULL;
+    SDL_Texture *hud = NULL;
     
     int tileset_nb_x, tileset_nb_y;
     
@@ -64,7 +68,7 @@ int main(int argc, char *argv[])
     
     if (0 != initSDL(&main_renderer, &main_window))
         goto SDL_Cleanup;
-    if (0 != initTextures(main_renderer, &croute_texture, &assets_tiles, &npc_texture, &tileset_nb_x, &tileset_nb_y))
+    if (0 != initTextures(main_renderer, &croute_texture, &assets_tiles, &npc_texture, &hud, &tileset_nb_x, &tileset_nb_y))
         goto SDL_Cleanup;
     //charge les fichiers audio
     loadAudio(&jump, &hurt, &bump, &coin);
@@ -129,8 +133,6 @@ int main(int argc, char *argv[])
     loadLevelTiles(&level_overlay, assets_tiles, overlay_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer,
                    tileset_nb_x, tileset_nb_y);
     
-    
-
     //camera
     int cam_leftRight = 0;
     //special effect collision
@@ -170,156 +172,38 @@ int main(int argc, char *argv[])
             camera.moving = false;
         
         //clear renderer
-        SDL_SetRenderDrawColor(main_renderer, 255,183,128,255);
+        SDL_SetRenderDrawColor(main_renderer, 115,239,232,255); //255,183,128,255
         SDL_RenderClear(main_renderer);
         
-        //ACTUALISATIONS POSITION NPCS ==============================
-        for(int i=0; i<nb_npcs; i++)
-        {
-            //ne fait rien si le npc est désactivé
-            if(!npcs[i].obj.enabled)
-                continue;
-            if(npcs[i].jumping)
-            {
-                //change la position du personnage et renvoie true jusqu'à la fin du saut
-                npcs[i].jumping = updatePositionJump(nb_objs, objs, &npcs[i], npcs[i].frame_jump, &hurt_soundflag,
-                                                     main_tiles_grid, nb_tuiles_x, nb_tuiles_y);
-                //next frame jump
-                npcs[i].frame_jump++;
-            }
-            else
-            {
-                npcs[i].falling = playerFall(nb_objs, objs, &npcs[i], npcs[i].frame_fall, &bump_soundflag,
-                                             main_tiles_grid, nb_tuiles_x, nb_tuiles_y);
-                if(npcs[i].falling)
-                {
-                    npcs[i].frame_jump = 0;
-                    npcs[i].frame_fall++;
-                }
-                else
-                    npcs[i].frame_fall=0;
-            }
-            bool npc_moved;
-            if(npcs[i].walking)
-            {
-                int npc_left_right;
-                if (npcs[i].obj.direction == REQ_DIR_LEFT)
-                    npc_left_right = -1;
-                else
-                    npc_left_right = +1;
-                //change la position du personnage si on marche
-                npc_moved = updatePositionWalk(nb_objs, objs, &npcs[i], up_down, npc_left_right,
-                                               main_tiles_grid, nb_tuiles_x, nb_tuiles_y);
-                //go to next npcs[i].frame_walk
-                npcs[i].frame_walk++;
-                //inverse la direction si mur rencontré
-                if(!npc_moved)
-                {
-                    if (npcs[i].obj.direction == REQ_DIR_LEFT)
-                        npcs[i].obj.direction = REQ_DIR_RIGHT;
-                    else
-                        npcs[i].obj.direction = REQ_DIR_LEFT;
-                }
-            }
-            
-            if((npcs[i].frame_walk/NPC_ANIM_FRAME_LENGHT) >= NPC_ANIMATION_FRAMES)
-                npcs[i].frame_walk = 0;
-            if(!npcs[i].jumping)
-                npcs[i].frame_jump = 0;
-        }
+        //ANIMATION NPC
+        anim_npc(nb_npcs, nb_objs, npcs, objs, main_tiles_grid, 
+                 nb_tuiles_x, nb_tuiles_y, &hurt_soundflag, &bump_soundflag);
         
         //ACTUALISATIONS POSITION PERSONNAGE ================================================
-        if(player.jumping)
-        {
-            //change la position du personnage et renvoie true jusqu'à la fin du saut
-            player.jumping = updatePositionJump(nb_objs, objs, &player, player.frame_jump, &hurt_soundflag,
-                                                main_tiles_grid, nb_tuiles_x, nb_tuiles_y);
-            //next frame jump
-            player.frame_jump++;
-        }
-        else
-        {
-            player.falling = playerFall(nb_objs, objs, &player, player.frame_fall, &bump_soundflag, 
-                                        main_tiles_grid, nb_tuiles_x, nb_tuiles_y);
-            if(player.falling)
-            {
-                player.frame_jump = 0;
-                player.frame_fall++;
-            }
-            else
-                player.frame_fall=0;
-        }
-        bool player_moved = false;
-        if(player.walking)
-        {
-            //change la position du personnage si on marche
-            player_moved = updatePositionWalk(nb_objs, objs, &player, up_down, left_right, 
-                                              main_tiles_grid, nb_tuiles_x, nb_tuiles_y);
-            player.obj.collider.x = player.obj.position.x + PLAYER_COL_SHIFT;
-            //go to next player.frame_walk
-            player.frame_walk++;
-        }
+        bool player_moved=false;
+        anim_main_character(nb_objs, &player, objs, main_tiles_grid, nb_tuiles_x, nb_tuiles_y, &hurt_soundflag, &bump_soundflag,
+                            &player_moved, up_down, left_right);
         
         //RECHERCHE D'ÉVÉNEMENTS LIÉS À LA RENCONTRE D'OBJETS SPÉCIAUX
-        int sp_act = checkCollisionSpecialAction(nb_objs, &objs, nb_npcs, &npcs, &player, &main_tiles_grid, nb_tuiles_x, &obj_type);
-        if(sp_act)
+        unsigned sp_act = checkCollisionSpecialAction(nb_objs, &objs, nb_npcs, &npcs, &player, 
+                                                 &main_tiles_grid, &overlay_tiles_grid, nb_tuiles_x, nb_tuiles_y, &obj_type);
+        if(sp_act != 0)
         {
-            if(obj_type == IT_COIN)
+            if(((sp_act & SP_AC_EARN_COIN) | (sp_act & SP_AC_EARN_HEART)) > 0)
             {
                 loadLevelTiles(&level_main_layer, assets_tiles, main_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer,
                                tileset_nb_x, tileset_nb_y);
+                loadLevelTiles(&level_overlay, assets_tiles, overlay_tiles_grid, nb_tuiles_x, nb_tuiles_y, main_renderer,
+                               tileset_nb_x, tileset_nb_y);
                 Mix_PlayChannel(-1, coin, 0);
             }
-            else if (obj_type == NPC_SANGLIER)
+            if ((sp_act & SP_AC_HURT) > 0)
                 Mix_PlayChannel(-1, hurt, 0);
         }
         
 
         //MOUVEMENT AUTO DE LA CAMÉRA :
-        int diff = player.obj.collider.x - camera.texLoadSrc.x;
-        //si le perso a pu avancer
-        if(player_moved)
-        {
-            //bouge la caméra vers la droite si pos joueur > 8 minisprites et gauche si pos joueur < 8 minisprites
-            if( ( (diff > 8*TILE_SIZE) && (left_right == +1) ) || ( (diff < 8*TILE_SIZE) && (left_right == -1) ) )
-            {
-                camera.moving = true;
-                cam_leftRight = left_right;
-                
-                //dépassement des limites de déplacement caméra
-                int x_max = nb_tuiles_x * TILE_SIZE;
-                if(cam_leftRight == -1 && camera.absCoord.x <= 0)
-                {
-                    camera.absCoord.x = 0;
-                    camera.texLoadSrc.x = 0;
-                    camera.moving = false;
-                    cam_leftRight = 0;
-                }
-                else if((cam_leftRight == +1) && (camera.absCoord.x + camera.absCoord.w >= x_max))
-                {
-                    camera.absCoord.x = x_max - camera.absCoord.w;
-                    camera.texLoadSrc.x = x_max - camera.texLoadSrc.w;
-                    camera.moving = false;
-                    cam_leftRight = 0;
-                }
-            }
-        }
-        else
-        {
-            camera.moving = false;
-            cam_leftRight = 0;
-        }
-        //si joueur en dehors de la caméra
-        if(!player_moved && ((diff < 0) || (diff > SPRITE_SIZE*NB_SPRITES_X)))
-        {
-            camera.texLoadSrc.x = player.obj.position.x;
-            camera.absCoord.x = player.obj.position.x;
-        }
-        if(camera.moving)
-        {
-            //change la position de la cam
-            updatePositionCam(nb_objs, objs, &camera, cam_leftRight);
-        }
+        anim_camera(player, &camera, player_moved, left_right, nb_tuiles_x, &cam_leftRight);
         
         //SOUNDFLAGS
         if(hurt_soundflag)
@@ -337,6 +221,9 @@ int main(int argc, char *argv[])
         //RÉINITIALISATION DE LA POSITION DU JOUEUR
         if((player.obj.position.y > NATIVE_HEIGHT) || (player.obj.pdv <= 0))
             initPlayer(&player, false);
+            
+        if(player.obj.pdv > PLAYER_MAX_LIFE)
+            player.obj.pdv = PLAYER_MAX_LIFE;
         
         
         //RENDER======================
@@ -358,7 +245,10 @@ int main(int argc, char *argv[])
         //donne le bon identifiant de sprite en fonction des 3 paramètres
         spriteID = chosePlayerSprite(player.obj.direction, player.walking, player.obj.type, player.frame_walk/DEFAULT_ANIM_FRAMES, &flip);
         //charge la texture du perso dans le renderer
-        loadPlayerSprite(main_renderer, croute_texture, player.obj.position.x-camera.texLoadSrc.x, player.obj.position.y, spriteID, flip);        
+        loadPlayerSprite(main_renderer, croute_texture, player.obj.position.x-camera.texLoadSrc.x, player.obj.position.y, spriteID, flip);   
+
+        HUD_update(main_renderer, &hud, assets_tiles, tileset_nb_x, tileset_nb_y, player);
+        copieTextureSurRender(main_renderer, hud, 0, 0, RECT_NULL, SDL_FLIP_NONE, WIN_SCALE);
         //update screen
         SDL_RenderPresent(main_renderer);
 
@@ -385,6 +275,9 @@ SDL_Cleanup:
         Mix_FreeChunk(coin);
     if(NULL != level_overlay)
         SDL_DestroyTexture(level_overlay);
+    if(NULL != hud)
+        SDL_DestroyTexture(hud);
+        
     destroyTextures(&croute_texture, &assets_tiles, &level_main_layer, &npc_texture);
     quitSDL(&main_renderer, &main_window);
     

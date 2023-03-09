@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "enumerations.h"
 
@@ -27,6 +28,12 @@ int initSDL(SDL_Renderer **renderer, SDL_Window **window)
     {
         fprintf(stderr, "erreur Mix_OpenAudio : %s\n", Mix_GetError());
         return status;
+    }
+    //initialize SDL_ttf
+    if(0 != TTF_Init())
+    {
+        fprintf(stderr, "Erreur TTF_Init : %s", TTF_GetError());
+        return EXIT_FAILURE;
     }
     
     *window = SDL_CreateWindow("Les Croute", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -62,6 +69,7 @@ int quitSDL(SDL_Renderer **renderer, SDL_Window **window)
     if(NULL != *window)
         SDL_DestroyWindow(*window);
     IMG_Quit();
+    TTF_Quit();
     SDL_Quit();
     Mix_CloseAudio();
     Mix_Quit();

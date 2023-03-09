@@ -14,7 +14,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=Adelia
-Date                   :=08/03/23
+Date                   :=09/03/23
 CodeLitePath           :=/home/adelia/.codelite
 MakeDirCommand         :=mkdir -p
 LinkerName             :=/usr/bin/clang++-15
@@ -53,7 +53,7 @@ AR       := /usr/bin/ar
 CXX      := /usr/bin/clang++-15
 CC       := /usr/bin/clang-15
 CXXFLAGS :=  -gdwarf-2 -O0 -Wall $(Preprocessors)
-CFLAGS   := -std=c17 -gdwarf-2 -O0 -Wall $(Preprocessors)
+CFLAGS   := -std=c17 -O0 -gdwarf-2 -pedantic -std=c17 -Wall -fno-common  -fno-builtin $(Preprocessors)
 ASFLAGS  := 
 AS       := /usr/bin/as
 
@@ -62,7 +62,7 @@ AS       := /usr/bin/as
 ## User defined environment variables
 ##
 CodeLiteDir:=/usr/share/codelite
-Objects0=$(IntermediateDirectory)/pl_mouvements.c$(ObjectSuffix) $(IntermediateDirectory)/fichiers.c$(ObjectSuffix) $(IntermediateDirectory)/npc.c$(ObjectSuffix) $(IntermediateDirectory)/audio.c$(ObjectSuffix) $(IntermediateDirectory)/main.c$(ObjectSuffix) $(IntermediateDirectory)/fx_switch_events.c$(ObjectSuffix) $(IntermediateDirectory)/sdl_init_and_quit.c$(ObjectSuffix) $(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/pl_mouvements.c$(ObjectSuffix) $(IntermediateDirectory)/fichiers.c$(ObjectSuffix) $(IntermediateDirectory)/anim.c$(ObjectSuffix) $(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) $(IntermediateDirectory)/npc.c$(ObjectSuffix) $(IntermediateDirectory)/audio.c$(ObjectSuffix) $(IntermediateDirectory)/main.c$(ObjectSuffix) $(IntermediateDirectory)/fx_switch_events.c$(ObjectSuffix) $(IntermediateDirectory)/sdl_init_and_quit.c$(ObjectSuffix) 
 
 
 
@@ -109,6 +109,22 @@ $(IntermediateDirectory)/fichiers.c$(DependSuffix): fichiers.c
 $(IntermediateDirectory)/fichiers.c$(PreprocessSuffix): fichiers.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/fichiers.c$(PreprocessSuffix) fichiers.c
 
+$(IntermediateDirectory)/anim.c$(ObjectSuffix): anim.c $(IntermediateDirectory)/anim.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/anim.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/anim.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/anim.c$(DependSuffix): anim.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/anim.c$(ObjectSuffix) -MF$(IntermediateDirectory)/anim.c$(DependSuffix) -MM anim.c
+
+$(IntermediateDirectory)/anim.c$(PreprocessSuffix): anim.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/anim.c$(PreprocessSuffix) anim.c
+
+$(IntermediateDirectory)/textures_fx.c$(ObjectSuffix): textures_fx.c $(IntermediateDirectory)/textures_fx.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/textures_fx.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/textures_fx.c$(DependSuffix): textures_fx.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) -MF$(IntermediateDirectory)/textures_fx.c$(DependSuffix) -MM textures_fx.c
+
+$(IntermediateDirectory)/textures_fx.c$(PreprocessSuffix): textures_fx.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/textures_fx.c$(PreprocessSuffix) textures_fx.c
+
 $(IntermediateDirectory)/npc.c$(ObjectSuffix): npc.c $(IntermediateDirectory)/npc.c$(DependSuffix)
 	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/npc.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/npc.c$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/npc.c$(DependSuffix): npc.c
@@ -148,14 +164,6 @@ $(IntermediateDirectory)/sdl_init_and_quit.c$(DependSuffix): sdl_init_and_quit.c
 
 $(IntermediateDirectory)/sdl_init_and_quit.c$(PreprocessSuffix): sdl_init_and_quit.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/sdl_init_and_quit.c$(PreprocessSuffix) sdl_init_and_quit.c
-
-$(IntermediateDirectory)/textures_fx.c$(ObjectSuffix): textures_fx.c $(IntermediateDirectory)/textures_fx.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/textures_fx.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/textures_fx.c$(DependSuffix): textures_fx.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) -MF$(IntermediateDirectory)/textures_fx.c$(DependSuffix) -MM textures_fx.c
-
-$(IntermediateDirectory)/textures_fx.c$(PreprocessSuffix): textures_fx.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/textures_fx.c$(PreprocessSuffix) textures_fx.c
 
 
 -include $(IntermediateDirectory)/*$(DependSuffix)

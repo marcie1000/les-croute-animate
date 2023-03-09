@@ -2,6 +2,7 @@
 <CodeLite_Project Name="animate" Version="11000" InternalType="User templates">
   <VirtualDirectory Name="animate">
     <VirtualDirectory Name="sources">
+      <File Name="anim.c"/>
       <File Name="npc.c"/>
       <File Name="pl_mouvements.c"/>
       <File Name="audio.c"/>
@@ -11,6 +12,7 @@
       <File Name="fichiers.c"/>
     </VirtualDirectory>
     <VirtualDirectory Name="headers">
+      <File Name="anim.h"/>
       <File Name="npc.h"/>
       <File Name="pl_mouvements.h"/>
       <File Name="audio.h"/>
@@ -38,7 +40,7 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="clang-15" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-gdwarf-2;-O0;-Wall" C_Options="-gdwarf-2;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="1"/>
+      <Compiler Options="-gdwarf-2;-O0;-Wall" C_Options="-O0;-gdwarf-2;-pedantic;-std=c17;-Wall;-fno-common; -fno-builtin" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="1"/>
       <Linker Options="" Required="yes">
         <Library Value="SDL2"/>
         <Library Value="SDL2_ttf"/>

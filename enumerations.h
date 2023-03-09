@@ -25,7 +25,8 @@ enum speeds {
 
 enum others {
     PLAYER_COL_SHIFT = 5,
-    MAX_TILE_WALL = 36
+    MAX_TILE_WALL = 36,
+    PLAYER_MAX_LIFE = 3
 };
 
 enum player_requests {
@@ -86,12 +87,18 @@ enum interobj_types {
     IT_COIN
 };
 
-enum special_actions {
-    SP_AC_NONE,
-    SP_AC_EARN_COIN,
-    SP_AC_HURT,
-    SP_AC_NPC_HURT
+enum items_tiles {
+    ITEM_COIN = 123,
+    ITEM_HEART = 134,
+    ITEM_EMPTY_HEART = 124
 };
+
+//SPECIAL ACTIONS
+#define SP_AC_NONE          (0U)
+#define SP_AC_EARN_COIN     (1U)
+#define SP_AC_EARN_HEART    (2U)
+#define SP_AC_HURT          (4U)
+#define SP_AC_NPC_HURT      (8U)
 
 extern const char CROUTE_SPRITES_PNG[];
 extern const char ASSETS_TILES_PNG[];
@@ -101,6 +108,7 @@ extern const char AUDIO_FILE_HURT[];
 extern const char AUDIO_FILE_BUMP[];
 extern const char AUDIO_FILE_COIN[];
 extern const char LEVEL_1_FILENAME[];
+extern const char TTF_FONT_FILENAME[];
 extern const float player_speed;
 extern const SDL_Rect RECT_NULL;
 extern const float gravity;
