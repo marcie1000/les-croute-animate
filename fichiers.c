@@ -7,54 +7,54 @@
 
 #include "fichiers.h"
 
-int getNbrFromChars(char *chaine)
+int getNbrFromChars(char *string)
 //convertit une chaine en nombre.
 //si aucun nombre trouvé, renvoie 0
 {
-    int length = strlen(chaine);
+    int length = strlen(string);
     int newlength = length;
     int value = 0;
     for(int i = 0; i < length; i++)
     {
         //si n'est pas un caractère chiffre (en commençant par la fin)
-        if((chaine[length-i-1] < 48) || (chaine[length-i-1] > 57))
+        if((string[length-i-1] < 48) || (string[length-i-1] > 57))
             newlength--;
     }
     length = newlength;
     for(int i = 0; i < length; i++)
     {
-        value = value + (chaine[length-i-1]-48) * (pow(10, i));
+        value = value + (string[length-i-1]-48) * (pow(10, i));
     }
     return value;
     
 }
 
-int getCharsFromNmbr(unsigned int value, char *chaine)
-//Convertit un nombre en chaine.
-//Retourne le nombre de chiffres.
-{
-    int tmp = value;
-    int len = 0;
-    //calcule le nombre de chiffres
-    while(tmp != 0)
-    {
-        tmp = tmp/10;
-        len++;
-    }
-    
-    //limites
-    if(len > sizeof(chaine))
-        len = sizeof(chaine);
-    
-    for(int i = 0; i<len; i++)
-    {
-        int divide = value / (pow(10, len-i-1));
-        chaine[i] = '0' + divide;
-        value = value - divide * pow(10, len-i-1);
-    }
-    chaine[len] = '\0';
-    return len;
-}
+//int getCharsFromNmbr(unsigned int value, char *string)
+////Convertit un nombre en chaine.
+////Retourne le nombre de chiffres.
+//{
+//    int tmp = value;
+//    int len = 0;
+//    //calcule le nombre de chiffres
+//    while(tmp != 0)
+//    {
+//        tmp = tmp/10;
+//        len++;
+//    }
+//    
+//    //limites
+//    if(len > sizeof(string))
+//        len = sizeof(string);
+//    
+//    for(int i = 0; i<len; i++)
+//    {
+//        int divide = value / (pow(10, len-i-1));
+//        string[i] = '0' + divide;
+//        value = value - divide * pow(10, len-i-1);
+//    }
+//    string[len] = '\0';
+//    return len;
+//}
 
 int getLevelSize(char *text_line, int *taille_x, int *taille_y)
 {

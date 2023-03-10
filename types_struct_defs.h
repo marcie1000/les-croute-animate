@@ -4,12 +4,12 @@
 #include <SDL2/SDL.h>
 #include "enumerations.h"
 
-typedef struct flpoint_struct {
+typedef struct flpoint {
     float x;
     float y;
 }flpoint;
 
-typedef struct interobject_struct { //objets pouvant interragir avec le joueur
+typedef struct interobj { //objets pouvant interragir avec le joueur
     int type; //le type : wall, pnj etc
     flpoint position;
     SDL_Rect collider;
@@ -18,7 +18,7 @@ typedef struct interobject_struct { //objets pouvant interragir avec le joueur
     bool enabled; //l'objet est-il activé
 }interobj;
 
-typedef struct character_struct { //pour tout ce qui bouge : joueur, NPC
+typedef struct character { //pour tout ce qui bouge : joueur, NPC
     interobj obj;
     int puissance;
     int money;
@@ -29,12 +29,10 @@ typedef struct character_struct { //pour tout ce qui bouge : joueur, NPC
     int frame_hurt;
 }character;
 
-typedef struct character_struct character;
-
-typedef struct camera_struct {
-    SDL_Rect texLoadSrc;
-    SDL_Rect absCoord;
+typedef struct camera {
+    SDL_Rect texLoadSrc; //rect from the texture to be rendered
+    //SDL_Rect absCoord; //absolute coordinates of the camera (for now it's the same...)
     bool moving;
-}cam;
+}camera;
 
 #endif //TYPES_STRUCT_DEFS_H

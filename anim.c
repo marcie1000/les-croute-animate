@@ -4,15 +4,20 @@
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 
-#include "pl_mouvements.h"
+#include "collisions.h"
 #include "enumerations.h"
 #include "types_struct_defs.h"
 #include "anim.h"
 
+void flag_assign(unsigned *var, unsigned flag, bool condition)
+{
+    *var = condition ? *var | flag : *var & ~flag;
+}
 
 void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *main_tiles_grid, 
               int nb_tuiles_x, int nb_tuiles_y, bool *hurt_soundflag, bool *bump_soundflag)
 {
+    *bump_soundflag = false;
     //ACTUALISATIONS POSITION NPCS ==============================
     for(int i=0; i<nb_npcs; i++)
     {
@@ -36,7 +41,7 @@ void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *ma
             flag_assign(
                 &npcs[i].state,
                 CH_STATE_FALLING,
-                playerFall(nb_objs, objs, &npcs[i], npcs[i].frame_fall, bump_soundflag,
+                CharacterFall(nb_objs, objs, &npcs[i],
                            main_tiles_grid, nb_tuiles_x, nb_tuiles_y)
             );
             if(npcs[i].state & CH_STATE_FALLING)
@@ -59,7 +64,7 @@ void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *ma
                 &npcs[i].state,
                 CH_STATE_MOVED,
                 updatePositionWalk(nb_objs, objs, &npcs[i], 0, npc_left_right,
-                                   main_tiles_grid, nb_tuiles_x, nb_tuiles_y)
+                                   main_tiles_grid, nb_tuiles_x, nb_tuiles_y, false)
             );
             //go to next npcs[i].frame_walk
             npcs[i].frame_walk++;
@@ -80,17 +85,34 @@ void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *ma
     }
 }
 
-void flag_assign(unsigned *var, unsigned flag, bool condition)
-{
-    *var = condition ? *var | flag : *var & ~flag;
-}
-
 void anim_main_character(int nb_objs, character *player, interobj *objs, int *main_tiles_grid, 
                          int nb_tuiles_x, int nb_tuiles_y, bool *hurt_soundflag, bool *bump_soundflag, 
-                         int up_down, int left_right)
+                         int up_down, int left_right, bool debug)
 {
     flag_assign(&player->state, CH_STATE_MOVED, false);
-    if(player->state & CH_STATE_JUMPING)
+    
+    //===================== GRAVITY ======================
+    if(player->frame_jump == 0)
+    {
+        flag_assign(
+            &player->state,
+            CH_STATE_FALLING,
+            CharacterFall(nb_objs, objs, player, main_tiles_grid, 
+                          nb_tuiles_x, nb_tuiles_y)
+        );
+
+        if(player->state & CH_STATE_FALLING) 
+        {
+            player->frame_fall++;
+            flag_assign(&player->state, CH_STATE_JUMPING, false);
+        }
+        else 
+            player->frame_fall=0;    
+    }
+    //====================================================
+    
+    //===================== JUMP =========================
+    if((player->state & CH_STATE_JUMPING) && !(player->state & CH_STATE_FALLING))
     {
         flag_assign(
             &player->state,
@@ -102,22 +124,12 @@ void anim_main_character(int nb_objs, character *player, interobj *objs, int *ma
         //next frame jump
         player->frame_jump++;
     }
-    else
-    {  
-        flag_assign(
-            &player->state,
-            CH_STATE_FALLING,
-            playerFall(nb_objs, objs, player, player->frame_fall, bump_soundflag, 
-                                    main_tiles_grid, nb_tuiles_x, nb_tuiles_y)
-        );
-        if(player->state & CH_STATE_FALLING)
-        {
-            player->frame_jump = 0;
-            player->frame_fall++;
-        }
-        else
-            player->frame_fall=0;
-    }
+    
+    if(!(player->state & CH_STATE_JUMPING)) 
+        player->frame_jump = 0;
+    //====================================================
+    
+    //================== WALK / MOVE =====================
     if(player->state & CH_STATE_WALKING)
     {
         //change la position du personnage si on marche
@@ -125,13 +137,15 @@ void anim_main_character(int nb_objs, character *player, interobj *objs, int *ma
             &player->state,
             CH_STATE_MOVED,
             updatePositionWalk(nb_objs, objs, player, up_down, left_right, 
-                               main_tiles_grid, nb_tuiles_x, nb_tuiles_y)
+                               main_tiles_grid, nb_tuiles_x, nb_tuiles_y, debug)
         );                                  
         
         player->obj.collider.x = player->obj.position.x + PLAYER_COL_SHIFT;
         //go to next player->frame_walk
         player->frame_walk++;
     }
+    //====================================================
+    
     if(player->state & CH_STATE_HURT)
     {
         player->frame_hurt++;
@@ -141,54 +155,58 @@ void anim_main_character(int nb_objs, character *player, interobj *objs, int *ma
             player->frame_hurt = 0;
         }
     }
+    
+    //bump sound
+    static bool fall_tmp = true;
+    if(fall_tmp && !(player->state & CH_STATE_FALLING))
+        *bump_soundflag = true;
+    fall_tmp = (player->state & CH_STATE_FALLING);
 }
 
-void anim_camera(character player, cam *camera, int left_right, int nb_tuiles_x, int *cam_leftRight)
+void anim_camera(character player, camera *cam, int left_right, int nb_tuiles_x, int *cam_leftRight)
 {
-    int diff = player.obj.collider.x - camera->texLoadSrc.x;
+    int diff = player.obj.collider.x - cam->texLoadSrc.x;
     //si le perso a pu avancer
     if(player.state & CH_STATE_MOVED)
     {
         //bouge la caméra vers la droite si pos joueur > 8 minisprites et gauche si pos joueur < 8 minisprites
         if( ( (diff > 8*TILE_SIZE) && (left_right == +1) ) || ( (diff < 8*TILE_SIZE) && (left_right == -1) ) )
         {
-            camera->moving = true;
+            cam->moving = true;
             *cam_leftRight = left_right;
             
             //dépassement des limites de déplacement caméra
             int x_max = nb_tuiles_x * TILE_SIZE;
-            if(*cam_leftRight == -1 && camera->absCoord.x <= 0)
+            if(*cam_leftRight == -1 && cam->texLoadSrc.x <= 0)
             {
-                camera->absCoord.x = 0;
-                camera->texLoadSrc.x = 0;
-                camera->moving = false;
+                //cam->absCoord.x = 0;
+                cam->texLoadSrc.x = 0;
+                cam->moving = false;
                 *cam_leftRight = 0;
             }
-            else if((*cam_leftRight == +1) && (camera->absCoord.x + camera->absCoord.w >= x_max))
+            else if((*cam_leftRight == +1) && (cam->texLoadSrc.x + cam->texLoadSrc.w >= x_max))
             {
-                camera->absCoord.x = x_max - camera->absCoord.w;
-                camera->texLoadSrc.x = x_max - camera->texLoadSrc.w;
-                camera->moving = false;
+                //cam->absCoord.x = x_max - cam->absCoord.w;
+                cam->texLoadSrc.x = x_max - cam->texLoadSrc.w;
+                cam->moving = false;
                 *cam_leftRight = 0;
             }
         }
     }
     else
     {
-        camera->moving = false;
+        cam->moving = false;
         *cam_leftRight = 0;
     }
     //si joueur en dehors de la caméra
     if(!(player.state & CH_STATE_MOVED) && ((diff < 0) || (diff > SPRITE_SIZE*NB_SPRITES_X)))
     {
-        camera->texLoadSrc.x = player.obj.position.x;
-        camera->absCoord.x = player.obj.position.x;
+        cam->texLoadSrc.x = player.obj.position.x;
+        //cam->absCoord.x = player.obj.position.x;
     }
-    if(camera->moving)
+    if(cam->moving)
     {
-//            //change la position de la cam
-//            updatePositionCam(nb_objs, objs, &camera, *cam_leftRight);
-        camera->texLoadSrc.x += *cam_leftRight;
-        camera->absCoord.x += *cam_leftRight;
+        cam->texLoadSrc.x += *cam_leftRight;
+        //cam->absCoord.x += *cam_leftRight;
     }
 }

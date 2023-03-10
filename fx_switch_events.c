@@ -5,7 +5,7 @@
 
 #include "enumerations.h"
 
-void fonctionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_down, bool *jump_ended /*, int *cam_leftRight*/)
+void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_down, bool *jump_ended, bool *debug)
 {
     
     switch(e.type)
@@ -26,11 +26,11 @@ void fonctionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_dow
                     break;
                 case (TOUCHE_UP):
                     *requete = REQ_DIR_UP;
-                    *up_down = +1;
+                    *up_down = -1;
                     break;
                 case (TOUCHE_DOWN):
                     *requete = REQ_DIR_DOWN;
-                    *up_down = -1;
+                    *up_down = +1;
                     break;
                 case (TOUCHE_JUMP):
                     if (*jump_ended)
@@ -40,14 +40,9 @@ void fonctionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_dow
                     else
                         *requete = REQ_NONE;
                     break;
-//                case (TOUCHE_AR_LEFT):
-//                    *requete = REQ_CAM_LEFT;
-//                    *cam_leftRight = -1;
-//                    break;
-//                case (TOUCHE_AR_RIGHT):
-//                    *requete = REQ_CAM_RIGHT;
-//                    *cam_leftRight = +1;
-//                    break;
+                case (SDLK_t):
+                    *debug = true;
+                    break;
             }
             break;
         case (SDL_KEYUP):
@@ -67,29 +62,21 @@ void fonctionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_dow
                     break;
                 case (TOUCHE_UP):
                     *requete = REQ_NONE;
-                    if(*up_down == +1)
+                    if(*up_down == -1)
                         *up_down = 0;
                     break;
                 case (TOUCHE_DOWN):
                     *requete = REQ_NONE;
-                    if(*up_down == -1)
+                    if(*up_down == +1)
                         *up_down = 0;
                     break;
                 case (TOUCHE_JUMP):
                     *requete = REQ_NONE;
                     *jump_ended = true;
                     break;
-                    
-//                case (TOUCHE_AR_LEFT):
-//                    *requete = REQ_NONE;
-//                    if(*cam_leftRight == -1)
-//                        *cam_leftRight = 0;
-//                    break;
-//                case (TOUCHE_AR_RIGHT):
-//                    *requete = REQ_NONE;
-//                    if(*cam_leftRight == +1)
-//                        *cam_leftRight = 0;
-//                    break;
+                case (SDLK_t):
+                    *debug = false;
+                    break;
             }
             break;
     } //end switch (e.type)

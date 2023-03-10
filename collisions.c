@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
 #include <SDL2/SDL.h>
 
-#include "pl_mouvements.h"
+#include "collisions.h"
 #include "enumerations.h"
 #include "types_struct_defs.h"
 #include "anim.h"
-//#include "textures_fx.h"
 
 void initPlayer(character *ch, bool initmoney)
 {
@@ -24,9 +24,6 @@ void initPlayer(character *ch, bool initmoney)
     
     ch->obj.pdv = 1;
     ch->puissance = 1;
-    /*ch->walking = false;
-    ch->jumping = false;
-    ch->falling = false;*/
     
     ch->state = CH_STATE_NONE;
     
@@ -40,45 +37,57 @@ void initPlayer(character *ch, bool initmoney)
         ch->money = 0;
 }
 
-bool CheckPlayerOnTheGround(int nb_objs, interobj *objs, character *player, int *main_tiles_grid, 
+bool CheckCharacterOnTheGround(int nb_objs, interobj *objs, character *ch, int *main_tiles_grid, 
                             int nb_tiles_x, int nb_tiles_y)
 //vérifie si le joueur a les pieds posés sur qqch
 {
-    //the sides of the rectangles
+    //the sides of the collsion rectangles
     int leftB, rightB, topB;
     int leftA, rightA, bottomA;
     
-    //assignations aux valeurs des rectangles
-    //rectangle obj_col
-    leftA = player->obj.collider.x;
-    rightA = player->obj.collider.x + player->obj.collider.w;
-    bottomA = player->obj.collider.y + player->obj.collider.h;
+    //the sides of the ch collision rectangle
+    leftA = ch->obj.collider.x;
+    rightA = ch->obj.collider.x + ch->obj.collider.w;
+    bottomA = ch->obj.collider.y + ch->obj.collider.h;
     
     //coresponding ground tiles (subscripts of the main_tiles_grid array)
+    //will look at the tiles at the bottom left, bottom mid and bottom right of the ch
     int subscripts[3];
-    subscripts[0] = ((player->obj.collider.y + player->obj.collider.h)/TILE_SIZE)*nb_tiles_x + (player->obj.collider.x/TILE_SIZE) -1;
+    subscripts[0] = ((ch->obj.collider.y + ch->obj.collider.h)/TILE_SIZE)*nb_tiles_x + (ch->obj.collider.x/TILE_SIZE) -1;
     subscripts[1] = subscripts[0] + 1;
     subscripts[2] = subscripts[1] + 1;
     
+    //tile bounds rectangle
     SDL_Rect tilebnd;
     tilebnd.w = TILE_SIZE;
     tilebnd.h = TILE_SIZE;
 
-    for(int j = 0; j<3; j++)
+    //avoid useless checks if the subscripts are equals
+    //(happens when ch is aligned with tiles)
+    int start_count = 0, end_count = 3;
+    if(subscripts[0] == subscripts[1])
+        start_count++;
+    if(subscripts[1] == subscripts[2])
+        end_count--;
+    
+    for(int j = start_count; j<end_count; j++)
     {
-        //if the tile is one of the wall tiles
+        //if the tile exist and is one of the wall tiles
         if(subscripts[j] < nb_tiles_x*nb_tiles_y &&
            (main_tiles_grid[subscripts[j]] <= MAX_TILE_WALL) &&
            (main_tiles_grid[subscripts[j]] > 0))
         {
+            //gets the tile coordinates for the current subscript
             tilebnd.x = subscripts[j]%nb_tiles_x * TILE_SIZE;
             tilebnd.y = subscripts[j]/nb_tiles_x * TILE_SIZE;
             
+            //the sides of the tile collision rectangle
             topB = tilebnd.y;
             leftB = tilebnd.x;
             rightB = tilebnd.x + tilebnd.w;
-            //si il y a collision sur l'axe x et que le joueur touche le haut du collider
-            if( (leftA < rightB) && (rightA > leftB) && (bottomA == topB) )
+            //if collision on X axis and ch hits the top of the collider
+            int dif = topB - bottomA;
+            if( (leftA < rightB) && (rightA > leftB) && ((dif <= 0)) )
                 return true;                
         }     
     }
@@ -96,8 +105,8 @@ bool CheckPlayerOnTheGround(int nb_objs, interobj *objs, character *player, int 
                 topB = objs[i].collider.y;
                 leftB = objs[i].collider.x;
                 rightB = objs[i].collider.x + objs[i].collider.w;
-                //si il y a collision sur l'axe x et que le joueur touche le haut du collider
-                if( (leftA < rightB) && (rightA > leftB) && (bottomA == topB) )
+                //if collision on X axis and ch hits the top of the collider
+                if( (leftA < rightB) && (rightA > leftB) && ((topB == bottomA)) )
                     return true;
             }
         }
@@ -105,45 +114,42 @@ bool CheckPlayerOnTheGround(int nb_objs, interobj *objs, character *player, int 
     return false;
 }
 
-bool CheckPlayerJumpOnObj(interobj obj, character *player)
-//check if player jumps on an object, for example jumps on a NPC
+bool CheckCharacterJumpOnObj(interobj obj, character *ch)
+//check if ch jumps on an object, for example jumps on a NPC
 {    
-    //the sides of the rectangles
+    if(!obj.enabled)
+        return false;
+    
+    //the sides of the collsion rectangles
     int leftB, rightB, topB;
     int leftA, rightA, bottomA;
     
-    //assignations aux valeurs des rectangles
-    //rectangle obj_col
-    leftA = player->obj.collider.x;
-    rightA = player->obj.collider.x + player->obj.collider.w;
-    bottomA = player->obj.collider.y + player->obj.collider.h;
-    //rectangle b
-    //test de tous les colliders
-    //si objet activé
-    if(!obj.enabled)
-        return false;
-        
+    //the sides of the ch collision rectangle
+    leftA = ch->obj.collider.x;
+    rightA = ch->obj.collider.x + ch->obj.collider.w;
+    bottomA = ch->obj.collider.y + ch->obj.collider.h;
+
+    //the side of the object/npc rectangle
     topB = obj.collider.y;
     leftB = obj.collider.x;
     rightB = obj.collider.x + obj.collider.w;
-    //si il y a collision sur l'axe x et que le joueur touche le haut du collider
+    //if collision on X axis and ch hits the top of the collider
     if( (leftA < rightB) && (rightA > leftB) && (bottomA - topB > 0) && (bottomA - topB <=5) )
         return true;
     
     return false;
 }
 
-bool playerFall(int nb_objs, interobj *objs, character *player, int frame_fall, bool *bump_soundflag, 
+bool CharacterFall(int nb_objs, interobj *objs, character *ch, 
                 int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y)
 //adds gravity to a character
 {
-    *bump_soundflag = false;
-    bool on_the_ground = CheckPlayerOnTheGround(nb_objs, objs, player, main_tiles_grid, nb_tiles_x, nb_tiles_y);
+    bool on_the_ground = CheckCharacterOnTheGround(nb_objs, objs, ch, main_tiles_grid, nb_tiles_x, nb_tiles_y);
     //update position si le joueur n'a pas les pieds sur le sol
     int vitesse;
     if(!on_the_ground)
     {
-        vitesse = gravity * frame_fall;
+        vitesse = gravity * ch->frame_fall;
         //limiter
         if(vitesse > 5)
             vitesse = 5;
@@ -152,15 +158,25 @@ bool playerFall(int nb_objs, interobj *objs, character *player, int frame_fall, 
     int i=1;
     while ( !on_the_ground && (i<=vitesse) )
     {
-        player->obj.position.y ++;
-        player->obj.collider.y ++;
-        on_the_ground = CheckPlayerOnTheGround(nb_objs, objs, player, main_tiles_grid, nb_tiles_x, nb_tiles_y);
+        ch->obj.position.y ++;
+        ch->obj.collider.y ++;
+        on_the_ground = CheckCharacterOnTheGround(nb_objs, objs, ch, main_tiles_grid, nb_tiles_x, nb_tiles_y);
         //si vient de toucher le sol
-        if(on_the_ground)
-            *bump_soundflag = true;
         i++;
     }
-    //renvoie faux si on ne tombe pas et vrai si on tombe
+    
+    //avoid glitch : sometimes the player breaks in a wall
+    //if the position Y of the player, when they are on the ground,
+    //is not aligned with the tiles grid, the position is re aligned
+    //on the next top grid line
+    int flaw = (ch->obj.collider.y + ch->obj.collider.h) % TILE_SIZE;
+    if(flaw > 0 && on_the_ground)
+    {
+        ch->obj.collider.y --;
+        ch->obj.position.y --;
+    }
+        
+    //return false if we are not falling and true if we are falling
     return !on_the_ground;
 }
 
@@ -197,7 +213,8 @@ bool checkCollision(SDL_Rect a, SDL_Rect b)
     return true;
 }
 
-bool checkCollisionX(SDL_Rect ch_coll, SDL_Rect b, int dir)
+bool checkCollisionX(SDL_Rect ch_coll, SDL_Rect b, int dir, bool debug)
+//checks collision on X axis, left or right
 {
     //the sides of the rectangles
     int leftA, leftB;
@@ -217,10 +234,14 @@ bool checkCollisionX(SDL_Rect ch_coll, SDL_Rect b, int dir)
     topB = b.y;
     bottomB = b.y + b.h;
     
+    
+    if(debug)printf("CheckCollisionX :\nleftA = %d, rightA = %d, topA = %d, bottomA = %d\n", leftA, rightA, topA, bottomA);
+    if(debug)printf("leftB = %d, rightB = %d, topB = %d, bottomB = %d\n", leftB, rightB, topB, bottomB);
 
     //si collision sur l'axe y
     if( (bottomA >= topB) && (topA <= bottomB) )
     {
+        if(debug)printf("Enter condition 1\n");
         /*
         * SI :
         * 
@@ -232,42 +253,17 @@ bool checkCollisionX(SDL_Rect ch_coll, SDL_Rect b, int dir)
         * \                                                                              /
         * 
         */
-        if( ( (leftA == rightB) && (dir == -1) ) || ( (rightA == leftB) && (dir == 1) ) )
+//        int dif1 = abs(leftA-rightB);
+//        int dif2 = abs(leftB-rightA);
+        
+        if( ( (leftA == rightB) && (dir == -1) ) || ( (leftB == rightA) && (dir == 1) ) )
+        {
+            if(debug)printf("CheckCollisionX : true\n");
             return true;
+        }
     }
     
-    return false;
-}
-
-bool checkCollisionEndwall(SDL_Rect a, SDL_Rect b)
-//obsolete
-{
-    //the sides of the rectangles
-    int leftA, leftB;
-    int rightA, rightB;
-    int topA, topB;
-    int bottomA, bottomB;
-    
-    //assignations aux valeurs des rectangles
-    //rectangle a
-    leftA = a.x;
-    rightA = a.x + a.w;
-    topA = a.y;
-    bottomA = a.y + a.h;
-    //rectangle b
-    leftB = b.x;
-    rightB = b.x + b.w;
-    topB = b.y;
-    bottomB = b.y + b.h;
-
-    //si collision sur l'axe y
-    if( (bottomA >= topB) && (topA <= bottomB) )
-    {
-        //si collision sur l'axe x 
-        if( (leftA < rightB) && (rightA > leftB) )
-            return true;
-    }
-    
+    if(debug)printf("CheckCollisionX : false\n\n");
     return false;
 }
 
@@ -311,11 +307,11 @@ bool checkAllCollisions(SDL_Rect a, int nb_objs, interobj *objs, int req)
             {
                 case REQ_DIR_LEFT:
                     dir = -1;
-                    col = checkCollisionX(a, objs[i].collider, dir);
+                    col = checkCollisionX(a, objs[i].collider, dir, false);
                     break;
                 case REQ_DIR_RIGHT:
                     dir = +1;
-                    col = checkCollisionX(a, objs[i].collider, dir);
+                    col = checkCollisionX(a, objs[i].collider, dir, false);
                     break;
                 case REQ_JUMP:
                     col = checkCollisionJump(a, objs[i].collider);
@@ -327,30 +323,12 @@ bool checkAllCollisions(SDL_Rect a, int nb_objs, interobj *objs, int req)
     return false;
 }
 
-bool checkAllEndwallCollisions(SDL_Rect a, int nb_objs, interobj *objs, int cam_leftRight)
-//obsolete
-//teste collision entre la camera et les bords du monde
-{
-    bool col;
-
-    for(int i=0; i<nb_objs; i++)
-    {
-        if(objs[i].type == IT_ENDWALL)
-        {
-            col = checkCollisionEndwall(a, objs[i].collider);
-            if(col)
-                return true;
-        }
-    }
-    return false;
-}
-
-bool updatePositionJump(int nb_objs, interobj *objs, character *player, int frame_jump, bool *hurt_soundflag,
+bool updatePositionJump(int nb_objs, interobj *objs, character *ch, int frame_jump, bool *hurt_soundflag,
                         int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y)
 {
     *hurt_soundflag = false;
-    flpoint pos_init = player->obj.position;
-    SDL_Rect col_init = player->obj.collider;
+    flpoint pos_init = ch->obj.position;
+    SDL_Rect col_init = ch->obj.collider;
     int vitesse;
     //calcul de la vitesse de saut qui diminue progressivement
     vitesse = -(gravity) * frame_jump + jump_init_speed;
@@ -358,19 +336,19 @@ bool updatePositionJump(int nb_objs, interobj *objs, character *player, int fram
     if(vitesse <= 0)
         return false;
 
-    player->obj.position.y -= vitesse;
+    ch->obj.position.y -= vitesse;
     //======= collision tests with the ID of the tiles only ============
     //coresponding ground tiles (subscripts of the main_tiles_grid array)
     int subscripts[3];
     SDL_Rect tilebnd;
     tilebnd.w = TILE_SIZE;
     tilebnd.h = TILE_SIZE;
-    SDL_Rect pl_col = player->obj.collider;
+    SDL_Rect pl_col = ch->obj.collider;
 
     //test of all positions between 0 and vitesse
     for(int i=0; i<vitesse; i++)
     {
-        pl_col.y = --player->obj.collider.y;
+        pl_col.y = --ch->obj.collider.y;
         
         //top left
         subscripts[0] = ((pl_col.y-1)/TILE_SIZE)*nb_tiles_x + (pl_col.x/TILE_SIZE);
@@ -392,18 +370,18 @@ bool updatePositionJump(int nb_objs, interobj *objs, character *player, int fram
                     continue;
                 if (checkCollisionJump(pl_col, tilebnd))
                 {
-                    player->obj.collider.y = col_init.y - i;
-                    player->obj.position.y = pos_init.y - i;
+                    ch->obj.collider.y = col_init.y - i;
+                    ch->obj.position.y = pos_init.y - i;
                     *hurt_soundflag = true;
                     return false;
                 }
             }     
         }
               
-        if( checkAllCollisions(player->obj.collider, nb_objs, objs, REQ_JUMP) )
+        if( checkAllCollisions(ch->obj.collider, nb_objs, objs, REQ_JUMP) )
         {
-            player->obj.collider.y = col_init.y - i;
-            player->obj.position.y = pos_init.y - i;
+            ch->obj.collider.y = col_init.y - i;
+            ch->obj.position.y = pos_init.y - i;
             *hurt_soundflag = true;
             return false;
         }
@@ -411,25 +389,8 @@ bool updatePositionJump(int nb_objs, interobj *objs, character *player, int fram
     return true;
 }
 
-int updatePositionCam(int nb_objs, interobj *objs, cam *camera, int cam_leftRight)
-//obsolete
-{
-    //rectangle de test
-    SDL_Rect test_coll = camera->absCoord;
-    //incrémente position
-    test_coll.x += cam_leftRight;
-    if(!checkAllEndwallCollisions(test_coll, nb_objs, objs, cam_leftRight))
-    {
-        camera->absCoord.x += cam_leftRight;
-        camera->texLoadSrc.x += cam_leftRight;
-        //printf("%d,%d\n", camera->absCoord.x, camera->absCoord.x+camera->absCoord.w);
-    }
-    
-    return 0;
-}
-
-bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_down, int left_right, 
-                        int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y)
+bool updatePositionWalk(int nb_objs, interobj *objs, character *ch, int up_down, int left_right, 
+                        int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y, bool debug)
 {
     int requete;
     if (left_right < 0)
@@ -442,8 +403,8 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
     bool col = false;
     //reach end of level
     bool reach_end = false;
-    SDL_Rect coll_tmp = player->obj.collider; //ne change pas encore
-    flpoint pos_tmp = player->obj.position;
+    SDL_Rect coll_tmp = ch->obj.collider; //ne change pas encore
+    flpoint pos_tmp = ch->obj.position;
     pos_tmp.x += deplacement; //change ici
     int x_max = nb_tiles_x * TILE_SIZE;
 
@@ -455,7 +416,7 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
          * here 0 *-=========
          *          |   |   |
          * here 1 *_|   |   |
-         *          =========    <- the player sprite (squares represents tile size)
+         *          =========    <- the ch sprite (squares represents tile size)
          *          |   |   |
          * here 2 *_|   |   |
          *          =========
@@ -470,9 +431,9 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
             w=(coll_tmp.w/TILE_SIZE);
             if(w==0) w=1;
         }
-        subscripts[0] = (coll_tmp.y/TILE_SIZE)*nb_tiles_x + ((coll_tmp.x+1)/TILE_SIZE) + w;
-        subscripts[1] = ( (coll_tmp.y + TILE_SIZE -1) /TILE_SIZE )*nb_tiles_x + ((coll_tmp.x+1)/TILE_SIZE) + w;
-        subscripts[2] = ( (coll_tmp.y + TILE_SIZE -1) /TILE_SIZE + 1)*nb_tiles_x + ((coll_tmp.x+1)/TILE_SIZE) + w;
+        subscripts[0] = (  coll_tmp.y                 /TILE_SIZE) * nb_tiles_x + ((coll_tmp.x)/TILE_SIZE) + w;
+        subscripts[1] = ( (coll_tmp.y + TILE_SIZE -1) /TILE_SIZE) * nb_tiles_x + ((coll_tmp.x)/TILE_SIZE) + w;
+        subscripts[2] = ( (coll_tmp.y + TILE_SIZE -1) /TILE_SIZE +1) * nb_tiles_x + ((coll_tmp.x)/TILE_SIZE) + w;
         
         SDL_Rect tilebnd;
         tilebnd.w = TILE_SIZE;
@@ -495,14 +456,17 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
                 else dir = +1;
                 if(main_tiles_grid[subscripts[j]] <= 0 || main_tiles_grid[subscripts[j]] > MAX_TILE_WALL)
                     continue;
-                if (checkCollisionX(coll_tmp, tilebnd, dir))
+                
+                if (debug) printf("UpdatePositionWalk : subscript = %d, x = %d, y = %d, val = %d\n", subscripts[j], subscripts[j] % 127, 
+                subscripts[j] / 127, main_tiles_grid[subscripts[j]]);
+                if (checkCollisionX(coll_tmp, tilebnd, dir, debug))
                 {
                     //rabaisse à la dernière position possible
-                    pos_tmp.x = player->obj.position.x + i*left_right;
-                    //on utilise position comme base car si player_speed n'est pas
+                    pos_tmp.x = ch->obj.position.x + i*left_right;
+                    //on utilise position comme base car si ch_speed n'est pas
                     //entière cela causerait un décalage entre la position
                     //du collider (entière) et la position flottante du joueur
-                    coll_tmp.x = player->obj.position.x + i*left_right;
+                    coll_tmp.x = ch->obj.position.x + i*left_right;
                     col = true;
                     break; //sort de la boucle
                 }
@@ -517,74 +481,72 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *player, int up_d
         if (col || reach_end)
         {
             //rabaisse à la dernière position possible
-            pos_tmp.x = player->obj.position.x + i*left_right;
-            //on utilise position comme base car si player_speed n'est pas
+            pos_tmp.x = ch->obj.position.x + i*left_right;
+            //on utilise position comme base car si ch_speed n'est pas
             //entière cela causerait un décalage entre la position
             //du collider (entière) et la position flottante du joueur
-            coll_tmp.x = player->obj.position.x + i*left_right;
+            coll_tmp.x = ch->obj.position.x + i*left_right;
             break; //sort de la boucle
         }
     }
     
     //si il n'y a pas eu de collision
     if(!col)
-        coll_tmp.x = player->obj.position.x + deplacement;
+        coll_tmp.x = ch->obj.position.x + deplacement;
     
-    player->obj.position.x = pos_tmp.x;
-    player->obj.collider.x = coll_tmp.x;
+    ch->obj.position.x = pos_tmp.x;
+    ch->obj.collider.x = coll_tmp.x;
     
     return !col;
     
 }
 
 int checkCollisionSpecialAction(int nb_objs, interobj **objs, int nb_npcs, character **npcs,
-                                character *player, int **main_tiles_grid, int **overlay_tiles_grid,
-                                int nb_tiles_x, int nb_tiles_y, int *type)
+                                character *ch, int **main_tiles_grid, int **overlay_tiles_grid,
+                                int nb_tiles_x, int nb_tiles_y)
 {
     unsigned sp_act = SP_AC_NONE;
     //bool col = false;
     
     for(int i = 0; i<nb_npcs; i++)
     {
-        if((player->state & CH_STATE_FALLING) && (CheckPlayerJumpOnObj((*npcs)[i].obj, player)))
+        if((ch->state & CH_STATE_FALLING) && (CheckCharacterJumpOnObj((*npcs)[i].obj, ch)))
         {
-            (*npcs)[i].obj.pdv -= player->puissance;
+            (*npcs)[i].obj.pdv -= ch->puissance;
             if((*npcs)[i].obj.pdv == 0) (*npcs)[i].obj.enabled = false;
             sp_act |= SP_AC_NPC_HURT;
         }
         if( ( (*npcs)[i].obj.enabled ) && ( (*npcs)[i].obj.type == NPC_SANGLIER ) &&
-           !(player->state & CH_STATE_HURT) )
+           !(ch->state & CH_STATE_HURT) )
         {
-            if(checkCollision(player->obj.collider, (*npcs)[i].obj.collider))
+            if(checkCollision(ch->obj.collider, (*npcs)[i].obj.collider))
             {
-                *type = NPC_SANGLIER;
-                player->obj.pdv -= (*npcs)[i].puissance;
+                ch->obj.pdv -= (*npcs)[i].puissance;
                 sp_act |= SP_AC_HURT;
-                player->state |= CH_STATE_HURT;
+                ch->state |= CH_STATE_HURT;
             }
         }
     }
     
-    sp_act |= checkItemCollision(player, main_tiles_grid, overlay_tiles_grid, nb_tiles_x, nb_tiles_y);
+    sp_act |= checkItemCollision(ch, main_tiles_grid, overlay_tiles_grid, nb_tiles_x, nb_tiles_y);
     
 //    for(int i = 0; i<nb_objs; i++)
 //    {
 //        if( ( (*objs)[i].enabled ) && ( (*objs)[i].type == IT_COIN ) )
-//            col = checkCollision(player->obj.collider, (*objs)[i].collider);
+//            col = checkCollision(ch->obj.collider, (*objs)[i].collider);
 //        if(col)
 //        {
-//            objCollisionSpecialActions(i, objs, player, main_tiles_grid, nb_tiles_x);
-//            *type = IT_COIN;
+//            objCollisionSpecialActions(i, objs, ch, main_tiles_grid, nb_tiles_x);
 //            sp_act |= SP_AC_EARN_COIN;
 //        }
 //    }
     return sp_act;
 }
 
-int checkItemCollision(character *player, int **main_tiles_grid, int **overlay_tiles_grid, 
-                        int nb_tiles_x, int nb_tiles_y)
+int checkItemCollision(character *ch, int **main_tiles_grid, int **overlay_tiles_grid, 
+                       int nb_tiles_x, int nb_tiles_y)
 {
-    SDL_Rect pl_col = player->obj.collider;
+    SDL_Rect pl_col = ch->obj.collider;
     
     //coresponding ground tiles (subscripts of the main_tiles_grid array)
     int subscripts[9];
@@ -628,11 +590,11 @@ int checkItemCollision(character *player, int **main_tiles_grid, int **overlay_t
         {
             case ITEM_COIN:
                 sp_act |= SP_AC_EARN_COIN;
-                player->money++;
+                ch->money++;
                 break;
             case ITEM_HEART:
                 sp_act |= SP_AC_EARN_HEART;
-                player->obj.pdv++;
+                ch->obj.pdv++;
                 break;
         }
         
@@ -640,11 +602,11 @@ int checkItemCollision(character *player, int **main_tiles_grid, int **overlay_t
         {
             case ITEM_COIN:
                 sp_act |= SP_AC_EARN_COIN;
-                player->money++;
+                ch->money++;
                 break;
             case ITEM_HEART:
                 sp_act |= SP_AC_EARN_HEART;
-                player->obj.pdv++;
+                ch->obj.pdv++;
                 break;
         }
     }
@@ -681,16 +643,83 @@ int checkItemInLayer(int **tiles_grid, int subscript, SDL_Rect pl_col, SDL_Rect 
     return tileID;
 }
 
-void objCollisionSpecialActions(int id_obj, interobj **objs, character *player, int **main_tiles_grid, int nb_tiles_x)
-//obsolete
-//collision test with a programmed collider
-{
-    int posX = (*objs)[id_obj].position.x;
-    int posY = (*objs)[id_obj].position.y;
-    player->money++;
-    (*main_tiles_grid)[posY * nb_tiles_x + posX] = 0;
-    (*objs)[id_obj].enabled = false;
-    
-    printf("player.money = %d\n", player->money);
-}
+//void objCollisionSpecialActions(int id_obj, interobj **objs, character *ch, int **main_tiles_grid, int nb_tiles_x)
+////obsolete
+////collision test with a programmed collider
+//{
+//    int posX = (*objs)[id_obj].position.x;
+//    int posY = (*objs)[id_obj].position.y;
+//    ch->money++;
+//    (*main_tiles_grid)[posY * nb_tiles_x + posX] = 0;
+//    (*objs)[id_obj].enabled = false;
+//    
+//    printf("ch.money = %d\n", ch->money);
+//}
+
+//bool checkCollisionEndwall(SDL_Rect a, SDL_Rect b)
+////obsolete
+//{
+//    //the sides of the rectangles
+//    int leftA, leftB;
+//    int rightA, rightB;
+//    int topA, topB;
+//    int bottomA, bottomB;
+//    
+//    //assignations aux valeurs des rectangles
+//    //rectangle a
+//    leftA = a.x;
+//    rightA = a.x + a.w;
+//    topA = a.y;
+//    bottomA = a.y + a.h;
+//    //rectangle b
+//    leftB = b.x;
+//    rightB = b.x + b.w;
+//    topB = b.y;
+//    bottomB = b.y + b.h;
+//
+//    //si collision sur l'axe y
+//    if( (bottomA >= topB) && (topA <= bottomB) )
+//    {
+//        //si collision sur l'axe x 
+//        if( (leftA < rightB) && (rightA > leftB) )
+//            return true;
+//    }
+//    
+//    return false;
+//}
+
+//int updatePositionCam(int nb_objs, interobj *objs, camera *cam, int cam_leftRight)
+////obsolete
+//{
+//    //rectangle de test
+//    SDL_Rect test_coll = cam->texLoadSrc;
+//    //incrémente position
+//    test_coll.x += cam_leftRight;
+//    if(!checkAllEndwallCollisions(test_coll, nb_objs, objs, cam_leftRight))
+//    {
+//        //cam->absCoord.x += cam_leftRight;
+//        cam->texLoadSrc.x += cam_leftRight;
+//        //printf("%d,%d\n", cam->absCoord.x, cam->absCoord.x+cam->absCoord.w);
+//    }
+//    
+//    return 0;
+//}
+
+//bool checkAllEndwallCollisions(SDL_Rect a, int nb_objs, interobj *objs, int cam_leftRight)
+////obsolete
+////teste collision entre la camera et les bords du monde
+//{
+//    bool col;
+//
+//    for(int i=0; i<nb_objs; i++)
+//    {
+//        if(objs[i].type == IT_ENDWALL)
+//        {
+//            col = checkCollisionEndwall(a, objs[i].collider);
+//            if(col)
+//                return true;
+//        }
+//    }
+//    return false;
+//}
 

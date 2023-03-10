@@ -2,9 +2,9 @@
 <CodeLite_Project Name="animate" Version="11000" InternalType="User templates">
   <VirtualDirectory Name="animate">
     <VirtualDirectory Name="sources">
+      <File Name="collisions.c"/>
       <File Name="anim.c"/>
       <File Name="npc.c"/>
-      <File Name="pl_mouvements.c"/>
       <File Name="audio.c"/>
       <File Name="fx_switch_events.c"/>
       <File Name="sdl_init_and_quit.c"/>
@@ -12,9 +12,9 @@
       <File Name="fichiers.c"/>
     </VirtualDirectory>
     <VirtualDirectory Name="headers">
+      <File Name="collisions.h"/>
       <File Name="anim.h"/>
       <File Name="npc.h"/>
-      <File Name="pl_mouvements.h"/>
       <File Name="audio.h"/>
       <File Name="textures_fx.h"/>
       <File Name="types_struct_defs.h"/>

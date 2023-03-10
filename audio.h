@@ -4,6 +4,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 
-extern int loadAudio(Mix_Chunk **, Mix_Chunk **, Mix_Chunk **, Mix_Chunk **);
+extern int loadAudio(Mix_Chunk **jump, Mix_Chunk **hurt, Mix_Chunk **bump, Mix_Chunk **coin);
 
 #endif //AUDIO_H

@@ -15,8 +15,9 @@ static text_format hud_tf = {
     (SDL_Color){0,0,0,255}
 };
 
-int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, SDL_Texture **assets_tiles, SDL_Texture **npc_texture,
-                 SDL_Texture **hud, int *tileset_nb_x, int *tileset_nb_y)
+int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, 
+                 SDL_Texture **assets_tiles, SDL_Texture **npc_texture,
+                 SDL_Texture **hud, int *ts_nb_x, int *ts_nb_y)
 {
     int status = EXIT_FAILURE;
     
@@ -39,8 +40,8 @@ int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, SDL_Textu
         fprintf(stderr, "error SDL_QueryTexture : %s\n", SDL_GetError());
         return status;
     }
-    *tileset_nb_x = bounds.x / 8;
-    *tileset_nb_y = bounds.y / 8;
+    *ts_nb_x = bounds.x / 8;
+    *ts_nb_y = bounds.y / 8;
     
     *npc_texture = IMG_LoadTexture(renderer, NPC_SPRITES_PNG);
     if(NULL == *npc_texture)
@@ -63,7 +64,9 @@ int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, SDL_Textu
     return status;
 }
 
-int destroyTextures(SDL_Texture **croute_texture, SDL_Texture **assets_tiles, SDL_Texture **level_main, SDL_Texture **npc_texture)
+int destroyTextures(SDL_Texture **croute_texture, SDL_Texture **assets_tiles, 
+                    SDL_Texture **level_main, SDL_Texture **npc_texture, 
+                    SDL_Texture **level_overlay, SDL_Texture **hud)
 {
     int status = EXIT_FAILURE;
     
@@ -75,6 +78,10 @@ int destroyTextures(SDL_Texture **croute_texture, SDL_Texture **assets_tiles, SD
         SDL_DestroyTexture(*assets_tiles);
     if(NULL != *level_main)
         SDL_DestroyTexture(*level_main);
+    if(NULL != *level_overlay)
+        SDL_DestroyTexture(*level_overlay);
+    if(NULL != *hud)
+        SDL_DestroyTexture(*hud);
     
     status = EXIT_SUCCESS;
     return status;
@@ -134,12 +141,12 @@ int loadPlayerSprite(SDL_Renderer *renderer, SDL_Texture *croute_texture,
     return status;
 }
 
-int initLevelTextures(SDL_Texture **level_main, SDL_Renderer *renderer, int nb_tuiles_x, int nb_tuiles_y)
+int initLevelTextures(SDL_Texture **level_main, SDL_Renderer *renderer, int nbt_x, int nbt_y)
 //crée la texture du niveau
 {
-    int largeur_texture = nb_tuiles_x*TILE_SIZE;
+    int largeur_texture = nbt_x*TILE_SIZE;
     *level_main = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 
-                                    largeur_texture, nb_tuiles_y * TILE_SIZE);
+                                    largeur_texture, nbt_y * TILE_SIZE);
     if(NULL == *level_main)
     {
         fprintf(stderr, "erreur SDL_CreateTexture level_main : %s\n", SDL_GetError());
@@ -239,7 +246,7 @@ SDL_Texture *createText(text_format tf, const char *string, SDL_Renderer *ren)
 }
 
 int loadLevelTiles(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *level_tiles_grid, 
-                              int nb_tuiles_x, int nb_tuiles_y, SDL_Renderer *renderer, int tileset_nb_x, int tileset_nb_y)
+                   int nbt_x, int nbt_y, SDL_Renderer *renderer, int ts_nb_x, int ts_nb_y)
 //remplit la texture dest_text avec les bonnes tuiles
 {
     SDL_Rect source;
@@ -255,15 +262,15 @@ int loadLevelTiles(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *leve
     SDL_SetRenderDrawColor(renderer, 0,0,0,0);
     SDL_RenderClear(renderer);
     
-    for(int i=0; i<nb_tuiles_y; i++)
+    for(int i=0; i<nbt_y; i++)
     {
-        for(int j=0; j<(nb_tuiles_x/*NB_TILES_X + TEXTURE_TILES_SHIFTSIZE_X*/); j++)
+        for(int j=0; j<(nbt_x/*NB_TILES_X + TEXTURE_TILES_SHIFTSIZE_X*/); j++)
         {
-            if( 0 != level_tiles_grid[i * nb_tuiles_x + j] )
+            if( 0 != level_tiles_grid[i * nbt_x + j] )
             {
                 //if(i==7 && j==7)
                     //printf("test\n");
-                if( 0!= selectLvlAssetsTile(level_tiles_grid[i * nb_tuiles_x + j], &source, tileset_nb_x, tileset_nb_y) )
+                if( 0!= selectLvlAssetsTile(level_tiles_grid[i * nbt_x + j], &source, ts_nb_x, ts_nb_y) )
                     return EXIT_FAILURE;
                 if (0 != copieTextureSurRender(renderer, assets_tiles, j * TILE_SIZE, 
                     i * TILE_SIZE, source, SDL_FLIP_NONE, 1))
@@ -275,22 +282,22 @@ int loadLevelTiles(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *leve
     return EXIT_SUCCESS;
 }
 
-int selectLvlAssetsTile(int sprite_ID, SDL_Rect *source, int tileset_nb_x, int tileset_nb_y)
+int selectLvlAssetsTile(int sprite_ID, SDL_Rect *source, int ts_nb_x, int ts_nb_y)
 {
     int status = EXIT_FAILURE;
-    if (sprite_ID < 1 || sprite_ID > (tileset_nb_x * tileset_nb_y))
+    if (sprite_ID < 1 || sprite_ID > (ts_nb_x * ts_nb_y))
     {
         fprintf(stderr, "Erreur selectLvlAssetsTile() : sprite_ID valeur interdite (%d)\n", sprite_ID);
         return status;
     }
     //calcul de l'emplacement de la tile sur la texture
-    int ligne = sprite_ID / tileset_nb_x;
-    int colonne = sprite_ID % tileset_nb_x;
+    int ligne = sprite_ID / ts_nb_x;
+    int colonne = sprite_ID % ts_nb_x;
     colonne--;
     if(colonne < 0)
     {
         ligne--;
-        colonne = tileset_nb_x-1;
+        colonne = ts_nb_x-1;
     }    
     source->x = colonne*TILE_SIZE;
     source->y = ligne*TILE_SIZE;
@@ -301,7 +308,8 @@ int selectLvlAssetsTile(int sprite_ID, SDL_Rect *source, int tileset_nb_x, int t
     return status;
 }
 
-int chosePlayerSprite(int direction, bool player_moving, bool playerID, int rapport_frame, SDL_RendererFlip *flip)
+int chosePlayerSprite(int direction, bool player_moving, bool playerID, 
+                      int rapport_frame, SDL_RendererFlip *flip)
 //donne le bon identifiant de sprite en fonction des 3 paramètres
 {
     int spriteID;
@@ -374,7 +382,7 @@ int choseNPCSprite(int direction, bool moving, int rapport_frame, SDL_RendererFl
 }
 
 int loadNPCSprite(SDL_Renderer *renderer, SDL_Texture *npc_texture,
-                     int pos_x, int pos_y, int sprite_ID, SDL_RendererFlip flip)
+                  int pos_x, int pos_y, int sprite_ID, SDL_RendererFlip flip)
 {
     int status = EXIT_FAILURE;
     if (sprite_ID < 1 || sprite_ID > 4)

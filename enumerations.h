@@ -6,13 +6,13 @@
 enum window_parameters { 
     SPRITE_SIZE = 16, 
     TILE_SIZE = 8,
-    NB_SPRITES_X = 16,
-    NB_SPRITES_Y = 9,
-    NB_TILES_X = NB_SPRITES_X * 2,
-    NB_TILES_Y = NB_SPRITES_Y * 2,
+    NB_SPRITES_X = 16, //screen size X by sprites
+    NB_SPRITES_Y = 9, //screen size Y by sprites
+    NB_TILES_X = NB_SPRITES_X * 2, //screen size X by tiles
+    NB_TILES_Y = NB_SPRITES_Y * 2, //screen size Y by tiles
     NATIVE_WIDTH = SPRITE_SIZE * NB_SPRITES_X, 
     NATIVE_HEIGHT = SPRITE_SIZE * NB_SPRITES_Y,
-    WIN_SCALE = 4,
+    WIN_SCALE = 5,
     TEXTURE_TILES_SHIFTSIZE_X = 8 //en mini sprites
 };
 
