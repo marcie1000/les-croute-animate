@@ -165,16 +165,16 @@ bool CharacterFall(int nb_objs, interobj *objs, character *ch,
         i++;
     }
     
-    //avoid glitch : sometimes the player breaks in a wall
-    //if the position Y of the player, when they are on the ground,
-    //is not aligned with the tiles grid, the position is re aligned
-    //on the next top grid line
-    int flaw = (ch->obj.collider.y + ch->obj.collider.h) % TILE_SIZE;
-    if(flaw > 0 && on_the_ground)
-    {
-        ch->obj.collider.y --;
-        ch->obj.position.y --;
-    }
+//    //avoid glitch : sometimes the player breaks in a wall
+//    //if the position Y of the player, when they are on the ground,
+//    //is not aligned with the tiles grid, the position is re aligned
+//    //on the next top grid line
+//    int flaw = (ch->obj.collider.y + ch->obj.collider.h) % TILE_SIZE;
+//    if(flaw > 0 && on_the_ground)
+//    {
+//        ch->obj.collider.y --;
+//        ch->obj.position.y --;
+//    }
         
     //return false if we are not falling and true if we are falling
     return !on_the_ground;
@@ -213,7 +213,7 @@ bool checkCollision(SDL_Rect a, SDL_Rect b)
     return true;
 }
 
-bool checkCollisionX(SDL_Rect ch_coll, SDL_Rect b, int dir, bool debug)
+bool checkCollisionX(SDL_Rect ch_coll, SDL_Rect b, int dir/*, bool debug*/)
 //checks collision on X axis, left or right
 {
     //the sides of the rectangles
@@ -235,13 +235,13 @@ bool checkCollisionX(SDL_Rect ch_coll, SDL_Rect b, int dir, bool debug)
     bottomB = b.y + b.h;
     
     
-    if(debug)printf("CheckCollisionX :\nleftA = %d, rightA = %d, topA = %d, bottomA = %d\n", leftA, rightA, topA, bottomA);
-    if(debug)printf("leftB = %d, rightB = %d, topB = %d, bottomB = %d\n", leftB, rightB, topB, bottomB);
+    //if(debug)printf("CheckCollisionX :\nleftA = %d, rightA = %d, topA = %d, bottomA = %d\n", leftA, rightA, topA, bottomA);
+    //if(debug)printf("leftB = %d, rightB = %d, topB = %d, bottomB = %d\n", leftB, rightB, topB, bottomB);
 
     //si collision sur l'axe y
     if( (bottomA >= topB) && (topA <= bottomB) )
     {
-        if(debug)printf("Enter condition 1\n");
+        //if(debug)printf("Enter condition 1\n");
         /*
         * SI :
         * 
@@ -258,12 +258,12 @@ bool checkCollisionX(SDL_Rect ch_coll, SDL_Rect b, int dir, bool debug)
         
         if( ( (leftA == rightB) && (dir == -1) ) || ( (leftB == rightA) && (dir == 1) ) )
         {
-            if(debug)printf("CheckCollisionX : true\n");
+            //if(debug)printf("CheckCollisionX : true\n");
             return true;
         }
     }
     
-    if(debug)printf("CheckCollisionX : false\n\n");
+    //if(debug)printf("CheckCollisionX : false\n\n");
     return false;
 }
 
@@ -307,11 +307,11 @@ bool checkAllCollisions(SDL_Rect a, int nb_objs, interobj *objs, int req)
             {
                 case REQ_DIR_LEFT:
                     dir = -1;
-                    col = checkCollisionX(a, objs[i].collider, dir, false);
+                    col = checkCollisionX(a, objs[i].collider, dir/*, false*/);
                     break;
                 case REQ_DIR_RIGHT:
                     dir = +1;
-                    col = checkCollisionX(a, objs[i].collider, dir, false);
+                    col = checkCollisionX(a, objs[i].collider, dir/*, false*/);
                     break;
                 case REQ_JUMP:
                     col = checkCollisionJump(a, objs[i].collider);
@@ -390,7 +390,7 @@ bool updatePositionJump(int nb_objs, interobj *objs, character *ch, int frame_ju
 }
 
 bool updatePositionWalk(int nb_objs, interobj *objs, character *ch, int up_down, int left_right, 
-                        int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y, bool debug)
+                        int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y/*, SDL_Renderer *renderer, bool debug*/)
 {
     int requete;
     if (left_right < 0)
@@ -433,7 +433,7 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *ch, int up_down,
         }
         subscripts[0] = (  coll_tmp.y                 /TILE_SIZE) * nb_tiles_x + ((coll_tmp.x)/TILE_SIZE) + w;
         subscripts[1] = ( (coll_tmp.y + TILE_SIZE -1) /TILE_SIZE) * nb_tiles_x + ((coll_tmp.x)/TILE_SIZE) + w;
-        subscripts[2] = ( (coll_tmp.y + TILE_SIZE -1) /TILE_SIZE +1) * nb_tiles_x + ((coll_tmp.x)/TILE_SIZE) + w;
+        subscripts[2] = ( (coll_tmp.y + coll_tmp.h-1) /TILE_SIZE) * nb_tiles_x + ((coll_tmp.x)/TILE_SIZE) + w;
         
         SDL_Rect tilebnd;
         tilebnd.w = TILE_SIZE;
@@ -444,12 +444,18 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *ch, int up_down,
             //if the tile is one of the wall tiles
             if(subscripts[j] < nb_tiles_x*nb_tiles_y)
             {
-                if(requete == REQ_DIR_LEFT)
-                    tilebnd.x = coll_tmp.x - TILE_SIZE;
-                else
-                    tilebnd.x = (coll_tmp.x + coll_tmp.w);
-                tilebnd.x -= tilebnd.x % TILE_SIZE;
-                tilebnd.y = (subscripts[j] / nb_tiles_x + 1*(subscripts[j]!=0)) * TILE_SIZE;
+                tilebnd.x = subscripts[j] % nb_tiles_x * TILE_SIZE;
+                tilebnd.y = (subscripts[j] / nb_tiles_x /*+ 1*(subscripts[j]!=0))*/ * TILE_SIZE);
+                
+//                SDL_Rect tmprct;
+//                tmprct.x = tilebnd.x*WIN_SCALE;
+//                tmprct.y = tilebnd.y*WIN_SCALE;
+//                tmprct.w = tilebnd.w*WIN_SCALE;
+//                tmprct.h = tilebnd.h*WIN_SCALE;
+//                
+//                SDL_SetRenderTarget(renderer, NULL);
+//                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 100);
+//                SDL_RenderFillRect(renderer, &tmprct);
                 
                 int dir;
                 if(requete == REQ_DIR_LEFT) dir = -1;
@@ -457,9 +463,9 @@ bool updatePositionWalk(int nb_objs, interobj *objs, character *ch, int up_down,
                 if(main_tiles_grid[subscripts[j]] <= 0 || main_tiles_grid[subscripts[j]] > MAX_TILE_WALL)
                     continue;
                 
-                if (debug) printf("UpdatePositionWalk : subscript = %d, x = %d, y = %d, val = %d\n", subscripts[j], subscripts[j] % 127, 
-                subscripts[j] / 127, main_tiles_grid[subscripts[j]]);
-                if (checkCollisionX(coll_tmp, tilebnd, dir, debug))
+                //if (debug) printf("UpdatePositionWalk : subscript = %d, x = %d, y = %d, val = %d\n", subscripts[j], subscripts[j] % 127, 
+                //subscripts[j] / 127, main_tiles_grid[subscripts[j]]);
+                if (checkCollisionX(coll_tmp, tilebnd, dir/*, debug*/))
                 {
                     //rabaisse à la dernière position possible
                     pos_tmp.x = ch->obj.position.x + i*left_right;

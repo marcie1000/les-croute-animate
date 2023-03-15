@@ -33,7 +33,7 @@ const SDL_Rect RECT_NULL = {0,0,0,0};
 //prototypes
 extern int initSDL(SDL_Renderer **renderer, SDL_Window **window);
 extern int quitSDL(SDL_Renderer **renderer, SDL_Window **window);
-extern void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_down, bool *jump_ended, bool *debug);
+extern void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_down, bool *jump_ended/*, bool *debug*/);
 
 
 int main(int argc, char *argv[])
@@ -141,12 +141,12 @@ int main(int argc, char *argv[])
     //event loop
     while (!quit)
     {
-        static bool debug = false;
+        /*static bool debug = false;*/
         //printf("%f, %f\n", player.obj.position.x, player.obj.position.y);
         while(SDL_PollEvent(&e) != 0)
         {
             
-            functionSwitchEvent(e, &requete, &left_right, &up_down, &jump_key_ended, &debug);
+            functionSwitchEvent(e, &requete, &left_right, &up_down, &jump_key_ended/*, &debug*/);
             if(requete == REQ_QUIT)
                 quit = true;
             
@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
         
         //MAIN PLAYER ANIMATION
         anim_main_character(nb_objs, &player, objs, main_tiles_grid, nbTiles_x, nbTiles_y, 
-                            &hurt_soundflag, &bump_soundflag, up_down, left_right, debug);
+                            &hurt_soundflag, &bump_soundflag, up_down, left_right/*, main_renderer, debug*/);
         
         //SPECIAL COLLISIONS EVENTS
         unsigned sp_act = checkCollisionSpecialAction(nb_objs, &objs, nb_npcs, &npcs, &player, 

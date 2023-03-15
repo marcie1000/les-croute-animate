@@ -13,13 +13,13 @@ extern bool CheckCharacterJumpOnObj(interobj obj, character *ch);
 extern bool CharacterFall(int nb_objs, interobj *objs, character *ch, 
                        int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y);
 extern bool checkCollision(SDL_Rect a, SDL_Rect b);
-extern bool checkCollisionX(SDL_Rect ch_coll, SDL_Rect b, int dir, bool debug);
+extern bool checkCollisionX(SDL_Rect ch_coll, SDL_Rect b, int dir/*, bool debug*/);
 extern bool checkAllCollisions(SDL_Rect a, int nb_objs, interobj *objs, int req);
 extern bool checkCollisionJump(SDL_Rect a, SDL_Rect b);
 extern bool updatePositionJump(int nb_objs, interobj *objs, character *ch, int frame_jump, bool *hurt_soundflag,
                                int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y);
 extern bool updatePositionWalk(int nb_objs, interobj *objs, character *ch, int up_down, int left_right, 
-                               int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y, bool debug);
+                               int *main_tiles_grid, int nb_tiles_x, int nb_tiles_y/*, SDL_Renderer *renderer, bool debug*/);
 extern void initPlayer(character *ch, bool initmoney);
 extern int checkCollisionSpecialAction( int nb_objs, interobj **objs, int nb_npcs, character **npcs,
                                         character *ch, int **main_tiles_grid, int **overlay_tiles_grid,
@@ -28,6 +28,7 @@ extern int checkItemInLayer(int **tiles_grid, int subscript, SDL_Rect pl_col, SD
                             int nb_tiles_x, int nb_tiles_y);
 extern int checkItemCollision(character *ch, int **main_tiles_grid, int **overlay_tiles_grid, 
                               int nb_tiles_x, int nb_tiles_y);
+                              
                               
 //extern bool checkAllEndwallCollisions(SDL_Rect a, int nb_objs, interobj *objs, int cam_leftRight);
 //extern bool checkCollisionEndwall(SDL_Rect a, SDL_Rect b);

@@ -279,6 +279,7 @@ int loadLevelTiles(SDL_Texture **dest_text, SDL_Texture *assets_tiles, int *leve
         }
     }
     SDL_SetRenderTarget(renderer, NULL);
+//    SDL_SetTextureAlphaMod(*dest_text, 100);
     return EXIT_SUCCESS;
 }
 

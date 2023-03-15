@@ -64,7 +64,7 @@ void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *ma
                 &npcs[i].state,
                 CH_STATE_MOVED,
                 updatePositionWalk(nb_objs, objs, &npcs[i], 0, npc_left_right,
-                                   main_tiles_grid, nb_tuiles_x, nb_tuiles_y, false)
+                                   main_tiles_grid, nb_tuiles_x, nb_tuiles_y/*, false*/)
             );
             //go to next npcs[i].frame_walk
             npcs[i].frame_walk++;
@@ -87,7 +87,7 @@ void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *ma
 
 void anim_main_character(int nb_objs, character *player, interobj *objs, int *main_tiles_grid, 
                          int nb_tuiles_x, int nb_tuiles_y, bool *hurt_soundflag, bool *bump_soundflag, 
-                         int up_down, int left_right, bool debug)
+                         int up_down, int left_right/*, SDL_Renderer *renderer, bool debug*/)
 {
     flag_assign(&player->state, CH_STATE_MOVED, false);
     
@@ -137,7 +137,7 @@ void anim_main_character(int nb_objs, character *player, interobj *objs, int *ma
             &player->state,
             CH_STATE_MOVED,
             updatePositionWalk(nb_objs, objs, player, up_down, left_right, 
-                               main_tiles_grid, nb_tuiles_x, nb_tuiles_y, debug)
+                               main_tiles_grid, nb_tuiles_x, nb_tuiles_y/*, renderer, debug*/)
         );                                  
         
         player->obj.collider.x = player->obj.position.x + PLAYER_COL_SHIFT;

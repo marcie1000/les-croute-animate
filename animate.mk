@@ -14,7 +14,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=Adelia
-Date                   :=10/03/23
+Date                   :=15/03/23
 CodeLitePath           :=/home/adelia/.codelite
 MakeDirCommand         :=mkdir -p
 LinkerName             :=/usr/bin/clang++-15
@@ -62,7 +62,7 @@ AS       := /usr/bin/as
 ## User defined environment variables
 ##
 CodeLiteDir:=/usr/share/codelite
-Objects0=$(IntermediateDirectory)/collisions.c$(ObjectSuffix) $(IntermediateDirectory)/fichiers.c$(ObjectSuffix) $(IntermediateDirectory)/anim.c$(ObjectSuffix) $(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) $(IntermediateDirectory)/npc.c$(ObjectSuffix) $(IntermediateDirectory)/audio.c$(ObjectSuffix) $(IntermediateDirectory)/main.c$(ObjectSuffix) $(IntermediateDirectory)/fx_switch_events.c$(ObjectSuffix) $(IntermediateDirectory)/sdl_init_and_quit.c$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/fichiers.c$(ObjectSuffix) $(IntermediateDirectory)/collisions.c$(ObjectSuffix) $(IntermediateDirectory)/anim.c$(ObjectSuffix) $(IntermediateDirectory)/textures_fx.c$(ObjectSuffix) $(IntermediateDirectory)/npc.c$(ObjectSuffix) $(IntermediateDirectory)/audio.c$(ObjectSuffix) $(IntermediateDirectory)/main.c$(ObjectSuffix) $(IntermediateDirectory)/fx_switch_events.c$(ObjectSuffix) $(IntermediateDirectory)/sdl_init_and_quit.c$(ObjectSuffix) 
 
 
 
@@ -93,14 +93,6 @@ PreBuild:
 ##
 ## Objects
 ##
-$(IntermediateDirectory)/collisions.c$(ObjectSuffix): collisions.c $(IntermediateDirectory)/collisions.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/collisions.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/collisions.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/collisions.c$(DependSuffix): collisions.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/collisions.c$(ObjectSuffix) -MF$(IntermediateDirectory)/collisions.c$(DependSuffix) -MM collisions.c
-
-$(IntermediateDirectory)/collisions.c$(PreprocessSuffix): collisions.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/collisions.c$(PreprocessSuffix) collisions.c
-
 $(IntermediateDirectory)/fichiers.c$(ObjectSuffix): fichiers.c $(IntermediateDirectory)/fichiers.c$(DependSuffix)
 	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/fichiers.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/fichiers.c$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/fichiers.c$(DependSuffix): fichiers.c
@@ -108,6 +100,14 @@ $(IntermediateDirectory)/fichiers.c$(DependSuffix): fichiers.c
 
 $(IntermediateDirectory)/fichiers.c$(PreprocessSuffix): fichiers.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/fichiers.c$(PreprocessSuffix) fichiers.c
+
+$(IntermediateDirectory)/collisions.c$(ObjectSuffix): collisions.c $(IntermediateDirectory)/collisions.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/collisions.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/collisions.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/collisions.c$(DependSuffix): collisions.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/collisions.c$(ObjectSuffix) -MF$(IntermediateDirectory)/collisions.c$(DependSuffix) -MM collisions.c
+
+$(IntermediateDirectory)/collisions.c$(PreprocessSuffix): collisions.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/collisions.c$(PreprocessSuffix) collisions.c
 
 $(IntermediateDirectory)/anim.c$(ObjectSuffix): anim.c $(IntermediateDirectory)/anim.c$(DependSuffix)
 	$(CC) $(SourceSwitch) "/home/adelia/Programmation/CodeLite/les_croute/animate/anim.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/anim.c$(ObjectSuffix) $(IncludePath)

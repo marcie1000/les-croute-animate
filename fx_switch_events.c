@@ -5,7 +5,7 @@
 
 #include "enumerations.h"
 
-void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_down, bool *jump_ended, bool *debug)
+void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_down, bool *jump_ended/*, bool *debug*/)
 {
     
     switch(e.type)
@@ -40,9 +40,9 @@ void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_dow
                     else
                         *requete = REQ_NONE;
                     break;
-                case (SDLK_t):
-                    *debug = true;
-                    break;
+//                case (SDLK_t):
+//                    *debug = true;
+//                    break;
             }
             break;
         case (SDL_KEYUP):
@@ -74,9 +74,9 @@ void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_dow
                     *requete = REQ_NONE;
                     *jump_ended = true;
                     break;
-                case (SDLK_t):
-                    *debug = false;
-                    break;
+//                case (SDLK_t):
+//                    *debug = false;
+//                    break;
             }
             break;
     } //end switch (e.type)
