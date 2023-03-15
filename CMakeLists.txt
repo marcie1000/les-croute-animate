@@ -54,6 +54,9 @@ add_definitions(-gdwarf-2)
 add_definitions(-O0)
 add_definitions(-Wall)
 add_definitions(-std=c17)
+add_definitions(-pedantic)
+add_definitions(-fno-common)
+add_definitions(-fno-builtin)
 
 # Linker options
 
@@ -69,19 +72,20 @@ link_directories(
 
 # Define the C sources
 set ( C_SRCS
-    ${CMAKE_CURRENT_LIST_DIR}/pl_mouvements.c
     ${CMAKE_CURRENT_LIST_DIR}/fichiers.c
+    ${CMAKE_CURRENT_LIST_DIR}/collisions.c
+    ${CMAKE_CURRENT_LIST_DIR}/anim.c
+    ${CMAKE_CURRENT_LIST_DIR}/textures_fx.c
     ${CMAKE_CURRENT_LIST_DIR}/npc.c
     ${CMAKE_CURRENT_LIST_DIR}/audio.c
     ${CMAKE_CURRENT_LIST_DIR}/main.c
     ${CMAKE_CURRENT_LIST_DIR}/fx_switch_events.c
     ${CMAKE_CURRENT_LIST_DIR}/sdl_init_and_quit.c
-    ${CMAKE_CURRENT_LIST_DIR}/textures_fx.c
 )
 
 set_source_files_properties(
     ${C_SRCS} PROPERTIES COMPILE_FLAGS 
-    " -std=c17 -gdwarf-2 -O0 -Wall")
+    " -std=c17 -O0 -gdwarf-2 -pedantic -std=c17 -Wall -fno-common -fno-builtin")
 
 if(WIN32)
     enable_language(RC)

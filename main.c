@@ -16,15 +16,15 @@
 #include "anim.h"
 
 //constantes
-const char CROUTE_SPRITES_PNG[] = "images/croute_sprites.png";
-const char ASSETS_TILES_PNG[] = "images/GBC_assets_n_tiles.png";
-const char NPC_SPRITES_PNG[] = "images/NPC_sprites.png";
-const char AUDIO_FILE_JUMP[] = "sounds/Jump.wav";
-const char AUDIO_FILE_HURT[] = "sounds/Hurt.wav";
-const char AUDIO_FILE_BUMP[] = "sounds/Bump.wav";
-const char AUDIO_FILE_COIN[] = "sounds/Coin.wav";
-const char LEVEL_1_FILENAME[] = "levels/niveau1_builder.csv";
-const char TTF_FONT_FILENAME[] = "m5x7.ttf";
+const char CROUTE_SPRITES_PNG[] = "assets/images/croute_sprites.png";
+const char ASSETS_TILES_PNG[] = "assets/images/GBC_assets_n_tiles.png";
+const char NPC_SPRITES_PNG[] = "assets/images/NPC_sprites.png";
+const char AUDIO_FILE_JUMP[] = "assets/sounds/Jump.wav";
+const char AUDIO_FILE_HURT[] = "assets/sounds/Hurt.wav";
+const char AUDIO_FILE_BUMP[] = "assets/sounds/Bump.wav";
+const char AUDIO_FILE_COIN[] = "assets/sounds/Coin.wav";
+const char LEVEL_1_FILENAME[] = "assets/levels/niveau1_builder.csv";
+const char TTF_FONT_FILENAME[] = "assets/m5x7.ttf";
 const float player_speed = 1;
 const float gravity = 0.35; //default 0.35
 const float jump_init_speed = 5.5; //default 5.5

@@ -10,9 +10,9 @@
 #include "types_struct_defs.h"
 
 static text_format hud_tf = {
-    TTF_FONT_FILENAME,
-    16,
-    (SDL_Color){0,0,0,255}
+    TTF_FONT_FILENAME, //font
+    15, //size
+    {0,0,0,255} //color
 };
 
 int initTextures(SDL_Renderer *renderer, SDL_Texture **croute_texture, 
@@ -228,7 +228,7 @@ SDL_Texture *createText(text_format tf, const char *string, SDL_Renderer *ren)
         fprintf(stderr, "Erreur TTF_OpenFont : %s", TTF_GetError());
         return NULL;
     }
-    surface = TTF_RenderUTF8_Blended(font, string, tf.color);
+    surface = TTF_RenderUTF8_Solid(font, string, tf.color);
     TTF_CloseFont(font);
     if (NULL == surface)
     {
