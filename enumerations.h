@@ -60,17 +60,17 @@ enum player_sprites {
 };
 
 enum touches_keymap {
-    TOUCHE_AR_LEFT = SDLK_LEFT,
+    /*TOUCHE_AR_LEFT = SDLK_LEFT,
     TOUCHE_AR_RIGHT = SDLK_RIGHT,
     TOUCHE_AR_UP = SDLK_UP,
-    TOUCHE_AR_DOWN = SDLK_DOWN,
+    TOUCHE_AR_DOWN = SDLK_DOWN,*/
     
-    TOUCHE_LEFT = SDLK_q,
-    TOUCHE_RIGHT = SDLK_d,
-    TOUCHE_UP = SDLK_z,
-    TOUCHE_DOWN = SDLK_s,
+    TOUCHE_LEFT = SDL_SCANCODE_A,
+    TOUCHE_RIGHT = SDL_SCANCODE_D,
+    TOUCHE_UP = SDL_SCANCODE_W,
+    TOUCHE_DOWN = SDL_SCANCODE_S,
     
-    TOUCHE_JUMP = SDLK_SPACE
+    TOUCHE_JUMP = SDL_SCANCODE_SPACE
 };
 
 //enum character_type {
@@ -93,6 +93,12 @@ enum items_tiles {
     ITEM_EMPTY_HEART = 124
 };
 
+enum script_functions_returns {
+    S_SUCCESS_IN_PROGRESS = EXIT_SUCCESS,   //work in progress
+    S_FAILURE = EXIT_FAILURE,               //failure
+    S_SUCCESS_DONE                          //work is done
+};
+
 //SPECIAL ACTIONS
 #define SP_AC_NONE          (0U     )
 #define SP_AC_EARN_COIN     (1U << 0)
@@ -108,9 +114,10 @@ enum items_tiles {
 #define CH_STATE_HURT       (1U << 3)
 #define CH_STATE_MOVED      (1U << 4)
 
-extern const char CROUTE_SPRITES_PNG[];
+extern const char ANTOINE_SPRITES_PNG[];
+extern const char DANIEL_SPRITES_PNG[];
 extern const char ASSETS_TILES_PNG[];
-extern const char NPC_SPRITES_PNG[];
+extern const char SANGLIER_SPRITES_PNG[];
 extern const char AUDIO_FILE_JUMP[];
 extern const char AUDIO_FILE_HURT[];
 extern const char AUDIO_FILE_BUMP[];

@@ -14,7 +14,7 @@ void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_dow
             *requete = REQ_QUIT;
             break;
         case (SDL_KEYDOWN):
-            switch(e.key.keysym.sym)
+            switch(e.key.keysym.scancode)
             {
                 case (TOUCHE_LEFT):
                     *requete = REQ_DIR_LEFT;
@@ -40,6 +40,8 @@ void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_dow
                     else
                         *requete = REQ_NONE;
                     break;
+                default:
+                    break;
 //                case (SDLK_t):
 //                    *debug = true;
 //                    break;
@@ -48,7 +50,7 @@ void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_dow
         case (SDL_KEYUP):
             //srequete = REQ_NONE;
             //si la touche relachée = la direction actuelle
-            switch(e.key.keysym.sym)
+            switch(e.key.keysym.scancode)
             {
                 case (TOUCHE_LEFT):
                     *requete = REQ_NONE;
@@ -73,6 +75,8 @@ void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_dow
                 case (TOUCHE_JUMP):
                     *requete = REQ_NONE;
                     *jump_ended = true;
+                    break;
+                default:
                     break;
 //                case (SDLK_t):
 //                    *debug = false;

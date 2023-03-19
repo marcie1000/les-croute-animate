@@ -22,7 +22,7 @@ void initPlayer(character *ch, bool initmoney)
     ch->obj.collider.w = SPRITE_SIZE - PLAYER_COL_SHIFT*2; 
     ch->obj.collider.h = SPRITE_SIZE-2;
     
-    ch->obj.pdv = 1;
+    ch->obj.life = 1;
     ch->puissance = 1;
     
     ch->state = CH_STATE_NONE;
@@ -518,8 +518,8 @@ int checkCollisionSpecialAction(int nb_objs, interobj **objs, int nb_npcs, chara
     {
         if((ch->state & CH_STATE_FALLING) && (CheckCharacterJumpOnObj((*npcs)[i].obj, ch)))
         {
-            (*npcs)[i].obj.pdv -= ch->puissance;
-            if((*npcs)[i].obj.pdv == 0) (*npcs)[i].obj.enabled = false;
+            (*npcs)[i].obj.life -= ch->puissance;
+            if((*npcs)[i].obj.life == 0) (*npcs)[i].obj.enabled = false;
             sp_act |= SP_AC_NPC_HURT;
         }
         if( ( (*npcs)[i].obj.enabled ) && ( (*npcs)[i].obj.type == NPC_SANGLIER ) &&
@@ -527,7 +527,7 @@ int checkCollisionSpecialAction(int nb_objs, interobj **objs, int nb_npcs, chara
         {
             if(checkCollision(ch->obj.collider, (*npcs)[i].obj.collider))
             {
-                ch->obj.pdv -= (*npcs)[i].puissance;
+                ch->obj.life -= (*npcs)[i].puissance;
                 sp_act |= SP_AC_HURT;
                 ch->state |= CH_STATE_HURT;
             }
@@ -600,7 +600,7 @@ int checkItemCollision(character *ch, int **main_tiles_grid, int **overlay_tiles
                 break;
             case ITEM_HEART:
                 sp_act |= SP_AC_EARN_HEART;
-                ch->obj.pdv++;
+                ch->obj.life++;
                 break;
         }
         
@@ -612,7 +612,7 @@ int checkItemCollision(character *ch, int **main_tiles_grid, int **overlay_tiles
                 break;
             case ITEM_HEART:
                 sp_act |= SP_AC_EARN_HEART;
-                ch->obj.pdv++;
+                ch->obj.life++;
                 break;
         }
     }

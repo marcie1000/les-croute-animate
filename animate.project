@@ -2,6 +2,8 @@
 <CodeLite_Project Name="animate" Version="11000" InternalType="User templates">
   <VirtualDirectory Name="animate">
     <VirtualDirectory Name="sources">
+      <File Name="game_scripts.c"/>
+      <File Name="script_engine.c"/>
       <File Name="collisions.c"/>
       <File Name="anim.c"/>
       <File Name="npc.c"/>
@@ -12,6 +14,8 @@
       <File Name="fichiers.c"/>
     </VirtualDirectory>
     <VirtualDirectory Name="headers">
+      <File Name="game_scripts.h"/>
+      <File Name="script_engine.h"/>
       <File Name="collisions.h"/>
       <File Name="anim.h"/>
       <File Name="npc.h"/>

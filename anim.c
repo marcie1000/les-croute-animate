@@ -85,83 +85,172 @@ void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *ma
     }
 }
 
-void anim_main_character(int nb_objs, character *player, interobj *objs, int *main_tiles_grid, 
-                         int nb_tuiles_x, int nb_tuiles_y, bool *hurt_soundflag, bool *bump_soundflag, 
-                         int up_down, int left_right/*, SDL_Renderer *renderer, bool debug*/)
+void anim_main_character(game_context *gctx)
 {
-    flag_assign(&player->state, CH_STATE_MOVED, false);
+    flag_assign(&gctx->player.state, CH_STATE_MOVED, false);
     
     //===================== GRAVITY ======================
-    if(player->frame_jump == 0)
+    if(gctx->player.frame_jump == 0)
     {
         flag_assign(
-            &player->state,
+            &gctx->player.state,
             CH_STATE_FALLING,
-            CharacterFall(nb_objs, objs, player, main_tiles_grid, 
-                          nb_tuiles_x, nb_tuiles_y)
+            CharacterFall(gctx->nb_objs, gctx->objs, &gctx->player, gctx->main_tiles_grid, 
+                          gctx->nbTiles_x, gctx->nbTiles_y)
         );
 
-        if(player->state & CH_STATE_FALLING) 
+        if(gctx->player.state & CH_STATE_FALLING) 
         {
-            player->frame_fall++;
-            flag_assign(&player->state, CH_STATE_JUMPING, false);
+            gctx->player.frame_fall++;
+            flag_assign(&gctx->player.state, CH_STATE_JUMPING, false);
         }
         else 
-            player->frame_fall=0;    
+            gctx->player.frame_fall=0;    
     }
     //====================================================
     
     //===================== JUMP =========================
-    if((player->state & CH_STATE_JUMPING) && !(player->state & CH_STATE_FALLING))
+    if((gctx->player.state & CH_STATE_JUMPING) && !(gctx->player.state & CH_STATE_FALLING))
     {
         flag_assign(
-            &player->state,
+            &gctx->player.state,
             CH_STATE_JUMPING,
             //change la position du personnage et renvoie true jusqu'à la fin du saut
-            updatePositionJump(nb_objs, objs, player, player->frame_jump, hurt_soundflag,
-                               main_tiles_grid, nb_tuiles_x, nb_tuiles_y)
+            updatePositionJump(gctx->nb_objs, gctx->objs, &gctx->player, gctx->player.frame_jump, &gctx->hurt_soundflag,
+                               gctx->main_tiles_grid, gctx->nbTiles_x, gctx->nbTiles_y)
         );
         //next frame jump
-        player->frame_jump++;
+        gctx->player.frame_jump++;
     }
     
-    if(!(player->state & CH_STATE_JUMPING)) 
-        player->frame_jump = 0;
+    if(!(gctx->player.state & CH_STATE_JUMPING)) 
+        gctx->player.frame_jump = 0;
     //====================================================
     
     //================== WALK / MOVE =====================
-    if(player->state & CH_STATE_WALKING)
+    if(gctx->player.state & CH_STATE_WALKING)
     {
         //change la position du personnage si on marche
         flag_assign(
-            &player->state,
+            &gctx->player.state,
             CH_STATE_MOVED,
-            updatePositionWalk(nb_objs, objs, player, up_down, left_right, 
-                               main_tiles_grid, nb_tuiles_x, nb_tuiles_y/*, renderer, debug*/)
+            updatePositionWalk(gctx->nb_objs, gctx->objs, &gctx->player, gctx->up_down, gctx->left_right, 
+                               gctx->main_tiles_grid, gctx->nbTiles_x, gctx->nbTiles_y/*, renderer, debug*/)
         );                                  
         
-        player->obj.collider.x = player->obj.position.x + PLAYER_COL_SHIFT;
-        //go to next player->frame_walk
-        player->frame_walk++;
+        gctx->player.obj.collider.x = gctx->player.obj.position.x + PLAYER_COL_SHIFT;
+        //go to next gctx->player.frame_walk
+        gctx->player.frame_walk++;
     }
     //====================================================
     
-    if(player->state & CH_STATE_HURT)
+    if(gctx->player.state & CH_STATE_HURT)
     {
-        player->frame_hurt++;
-        if(player->frame_hurt >= 120) 
+        gctx->player.frame_hurt++;
+        if(gctx->player.frame_hurt >= 120) 
         {
-            flag_assign(&player->state, CH_STATE_HURT, false);
-            player->frame_hurt = 0;
+            flag_assign(&gctx->player.state, CH_STATE_HURT, false);
+            gctx->player.frame_hurt = 0;
         }
     }
     
     //bump sound
     static bool fall_tmp = true;
-    if(fall_tmp && !(player->state & CH_STATE_FALLING))
-        *bump_soundflag = true;
-    fall_tmp = (player->state & CH_STATE_FALLING);
+    if(fall_tmp && !(gctx->player.state & CH_STATE_FALLING))
+        gctx->bump_soundflag = true;
+    fall_tmp = (gctx->player.state & CH_STATE_FALLING);
 }
+
+void anim_scripted_npc(game_context *gctx, character *ch)
+{
+    flag_assign(&ch->state, CH_STATE_MOVED, false);
+    
+    //===================== GRAVITY ======================
+    if(ch->frame_jump == 0)
+    {
+        flag_assign(
+            &ch->state,
+            CH_STATE_FALLING,
+            CharacterFall(gctx->nb_objs, gctx->objs, ch, gctx->main_tiles_grid, 
+                          gctx->nbTiles_x, gctx->nbTiles_y)
+        );
+
+        if(ch->state & CH_STATE_FALLING) 
+        {
+            ch->frame_fall++;
+            flag_assign(&ch->state, CH_STATE_JUMPING, false);
+        }
+        else 
+            ch->frame_fall=0;    
+    }
+    //====================================================
+    
+    //===================== JUMP =========================
+    if((ch->state & CH_STATE_JUMPING) && !(ch->state & CH_STATE_FALLING))
+    {
+        flag_assign(
+            &ch->state,
+            CH_STATE_JUMPING,
+            //change la position du personnage et renvoie true jusqu'à la fin du saut
+            updatePositionJump(gctx->nb_objs, gctx->objs, ch, ch->frame_jump, &gctx->hurt_soundflag,
+                               gctx->main_tiles_grid, gctx->nbTiles_x, gctx->nbTiles_y)
+        );
+        //next frame jump
+        ch->frame_jump++;
+    }
+    
+    if(!(ch->state & CH_STATE_JUMPING)) 
+        ch->frame_jump = 0;
+    //====================================================
+    
+    //================== WALK / MOVE =====================
+    if(ch->state & CH_STATE_WALKING)
+    {
+        int left_right;
+        if(ch->obj.direction == REQ_DIR_LEFT)
+            left_right = -1;
+        else if(ch->obj.direction == REQ_DIR_RIGHT)
+            left_right = +1;
+        else
+            left_right = 0;
+        //change la position du personnage si on marche
+        flag_assign(
+            &ch->state,
+            CH_STATE_MOVED,
+            updatePositionWalk(gctx->nb_objs, gctx->objs, ch, 0, left_right, 
+                               gctx->main_tiles_grid, gctx->nbTiles_x, gctx->nbTiles_y/*, renderer, debug*/)
+        );                                  
+        
+        ch->obj.collider.x = ch->obj.position.x + PLAYER_COL_SHIFT;
+        //go to next ch->frame_walk
+        ch->frame_walk++;
+    }
+    //====================================================
+    
+    if(ch->state & CH_STATE_HURT)
+    {
+        ch->frame_hurt++;
+        if(ch->frame_hurt >= 120) 
+        {
+            flag_assign(&ch->state, CH_STATE_HURT, false);
+            ch->frame_hurt = 0;
+        }
+    }
+    
+    //bump sound
+    static bool fall_tmp = true;
+    if(fall_tmp && !(ch->state & CH_STATE_FALLING))
+        gctx->bump_soundflag = true;
+    fall_tmp = (ch->state & CH_STATE_FALLING);
+    
+    //cycle animation
+    if((ch->frame_walk/DEFAULT_ANIM_FRAMES) >= WALKING_ANIMATION_FRAMES)
+        ch->frame_walk = 0;
+    if(!(ch->state & CH_STATE_JUMPING))
+        ch->frame_jump = 0;
+    
+}
+
 
 void anim_camera(character player, camera *cam, int left_right, int nb_tuiles_x, int *cam_leftRight)
 {
@@ -199,7 +288,7 @@ void anim_camera(character player, camera *cam, int left_right, int nb_tuiles_x,
         *cam_leftRight = 0;
     }
     //si joueur en dehors de la caméra
-    if(!(player.state & CH_STATE_MOVED) && ((diff < 0) || (diff > SPRITE_SIZE*NB_SPRITES_X)))
+    if((diff < 0) || (diff > SPRITE_SIZE*NB_SPRITES_X))
     {
         cam->texLoadSrc.x = player.obj.position.x;
         //cam->absCoord.x = player.obj.position.x;
