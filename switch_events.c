@@ -1,11 +1,12 @@
 
 #include <stdbool.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL.h>
+#include <SDL_image.h>
 
 #include "enumerations.h"
+#include "switch_events.h"
 
-void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_down, bool *jump_ended/*, bool *debug*/)
+void functionSwitchEvent(SDL_Event e, int *requete, int *left_right, int *up_down, bool *jump_ended)
 {
     
     switch(e.type)

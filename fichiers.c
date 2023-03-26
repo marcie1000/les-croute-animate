@@ -4,133 +4,107 @@
 #include <stdbool.h>
 #include <math.h>
 #include <limits.h>
+#include <errno.h>
 
 #include "fichiers.h"
-
-int getNbrFromChars(char *string)
-//convertit une chaine en nombre.
-//si aucun nombre trouvé, renvoie 0
-{
-    int length = strlen(string);
-    int newlength = length;
-    int value = 0;
-    for(int i = 0; i < length; i++)
-    {
-        //si n'est pas un caractère chiffre (en commençant par la fin)
-        if((string[length-i-1] < 48) || (string[length-i-1] > 57))
-            newlength--;
-    }
-    length = newlength;
-    for(int i = 0; i < length; i++)
-    {
-        value = value + (string[length-i-1]-48) * (pow(10, i));
-    }
-    return value;
-    
-}
-
-//int getCharsFromNmbr(unsigned int value, char *string)
-////Convertit un nombre en chaine.
-////Retourne le nombre de chiffres.
-//{
-//    int tmp = value;
-//    int len = 0;
-//    //calcule le nombre de chiffres
-//    while(tmp != 0)
-//    {
-//        tmp = tmp/10;
-//        len++;
-//    }
-//    
-//    //limites
-//    if(len > sizeof(string))
-//        len = sizeof(string);
-//    
-//    for(int i = 0; i<len; i++)
-//    {
-//        int divide = value / (pow(10, len-i-1));
-//        string[i] = '0' + divide;
-//        value = value - divide * pow(10, len-i-1);
-//    }
-//    string[len] = '\0';
-//    return len;
-//}
 
 int getLevelSize(char *text_line, size_t *taille_x, size_t *taille_y)
 {
     int status = EXIT_FAILURE;
     
     //divise la chaine par ","
-    char *sous_chaine;
-    sous_chaine = strtok(text_line, ",");
-    if(NULL == sous_chaine)
+    char *sub_str;
+    sub_str = strtok(text_line, ",");
+    if(NULL == sub_str)
         return status;
     
     //taille_x
-    sous_chaine = strtok(NULL, ",");
-    if(NULL == sous_chaine)
+    sub_str = strtok(NULL, ",");
+    if(NULL == sub_str)
         return status;
     //conversion de la sous chaine en nombre
-    *taille_x = getNbrFromChars(sous_chaine);
+    errno = 0;
+    *taille_x = strtoul(sub_str, NULL, 10);
+    if(errno != 0)
+    {
+        perror("getLevelSize");
+        return status;
+    }
     
     //taille_y
-    sous_chaine = strtok(NULL, ",");
-    if(NULL == sous_chaine)
+    sub_str = strtok(NULL, ",");
+    if(NULL == sub_str)
         return status;
     //conversion de la sous chaine en nombre
-    *taille_y = getNbrFromChars(sous_chaine);
+    errno = 0;
+    *taille_y = strtoul(sub_str, NULL, 10);
+    if(errno != 0)
+    {
+        perror("getLevelSize");
+        return status;
+    }
     
     status = EXIT_SUCCESS;
     return status;
 }
 
-void tilesReading(size_t taille_x, size_t taille_y, FILE *level_file, char *buf, size_t buf_len, int **tiles_array)
+int tilesReading(size_t taille_x, size_t taille_y, FILE *level_file, char *buf, size_t buf_len, int **tiles_array)
 {
     //lecture de chaque ligne
-    for(int i = 0; i < taille_y; i++)
+    for(size_t i = 0; i < taille_y; i++)
     {
         //si erreur de lecture
         if(0 != lireLigne(level_file, buf, buf_len))
-            break; //break for i
-        char sous_chaine[buf_len];
-        int pos_x = 0;
+            return EXIT_FAILURE;
+        
+        char sub_str[buf_len];
+        size_t pos_x = 0;
         //lecture de chaque char du buf
-        for(int j = 0; j < buf_len; j++)
+        size_t j = 0;
+        while(j < buf_len)
         {
             //si on a une case vide
             if( buf[j] == ',' )
             {
                 //incrémente la position
                 pos_x++;
+                j++;
                 continue; //continue for j
             }
             //si on arrive en fin de ligne
-            if( buf[j] == '\n')
+            if( buf[j] == '\n' || buf[j] == '\0')
                 break; //break for j
             //si la taille d'une ligne est dépassée
             if(pos_x >= taille_x)
                 break; //break for j
-            
-            int k = 0;
-            strcpy(sous_chaine, "\0");
-            char c[] = "\0";
-            do
+
+            //copy the buffer in sub_str starting from j
+            memcpy(sub_str, (char*)&buf[j], buf_len-j);
+            errno = 0;
+            //converts chars in number
+            long result = strtol(sub_str, NULL, 10);
+            if(result > INT_MAX)
+                errno = ERANGE;
+            if(errno != 0)
             {
-                c[0] = buf[j+k];
-                strcat(sous_chaine, c);
-                k++;
-            }while( ( buf[j+k] >= 48 ) && ( buf[j+k] <= 57 ) ); //tant que char est un chiffre
-            //convertir la sous chaine en nombre et l'ajoute dans le tableau
-            (*tiles_array)[i * (taille_x) + pos_x] = getNbrFromChars(sous_chaine);
-            j = j+k-1;
+                perror("strtol");
+                break;
+            }
+            //writes value in array
+            (*tiles_array)[i * (taille_x) + pos_x] = (int)result;
+            //measures the length of the sub_string for this number
+            char tmp[50];
+            snprintf(tmp, 50, "%ld", result);
+            j += strlen(tmp);
         }
     }
+    return EXIT_SUCCESS;
 }
 
 int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, size_t nb_objs)
 {
     int status = EXIT_FAILURE;
-    char* sous_chaine;
+    char* sub_str;
     //============================================
     //boucle de remplissage du tableau objs
     for(int i=0; i<(nb_objs); i++)
@@ -143,30 +117,46 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         }
         //==============
         //*
-        sous_chaine = strtok(buf, ",");
-        if (NULL == strstr(sous_chaine, "*")) 
+        sub_str = strtok(buf, ",");
+        if (NULL == strstr(sub_str, "*")) 
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : *\n", i);
             return status;
         }
         
+//        //==============
+//        //ID
+//        //ID=
+//        sub_str = strtok(NULL, ",");
+//        if (NULL == strstr(sub_str, "ID=")) 
+//        {
+//            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : ID=\n", i);
+//            return status;
+//        }
+//        //value
+//        sub_str = strtok(NULL, ",");
+//        if (NULL == sub_str)
+//        {
+//            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : ID=[???]\n", i);
+//            return status;
+//        }
+//        (*objs)[i].ID = atoi(sub_str);
+        
         //==============
         //type=
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == strstr(sous_chaine, "type=")) 
+        sub_str = strtok(NULL, ",");
+        if (NULL == strstr(sub_str, "type=")) 
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : type=\n", i);
             return status;
         }
-        sous_chaine = strtok(NULL, ",");
+        sub_str = strtok(NULL, ",");
         
-        if (NULL != strstr(sous_chaine, "endwall"))
-            (*objs)[i].type = IT_ENDWALL;
-        else if (NULL != strstr(sous_chaine, "wall"))
+        if (NULL != strstr(sub_str, "wall"))
             (*objs)[i].type = IT_WALL;
-        else if (NULL != strstr(sous_chaine, "coin"))
-            (*objs)[i].type = IT_COIN;
-        else if (NULL != strstr(sous_chaine, "sanglier"))
+        else if (NULL != strstr(sub_str, "trigger"))
+            (*objs)[i].type = IT_TRIGGER;
+        else if (NULL != strstr(sub_str, "sanglier"))
             (*objs)[i].type = NPC_SANGLIER;
         else
             (*objs)[i].type = IT_NONE;
@@ -175,125 +165,125 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         //==============
         //position=
         //position en TUILES et non en PIXELS
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == strstr(sous_chaine, "position=")) 
+        sub_str = strtok(NULL, ",");
+        if (NULL == strstr(sub_str, "position=")) 
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : position=\n", i);
             return status;
         }
         //position x
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == sous_chaine)
+        sub_str = strtok(NULL, ",");
+        if (NULL == sub_str)
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : position.x=[???]\n", i);
             return status;
         }
-        (*objs)[i].position.x = getNbrFromChars(sous_chaine);
+        (*objs)[i].position.x = atoi(sub_str);
         //position y
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == sous_chaine)
+        sub_str = strtok(NULL, ",");
+        if (NULL == sub_str)
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : position.y=[???]\n", i);
             return status;
         }
-        (*objs)[i].position.y = getNbrFromChars(sous_chaine);
+        (*objs)[i].position.y = atoi(sub_str);
         
         //==============
         //collider=
         //collider en PIXELS
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == strstr(sous_chaine, "collider=")) 
+        sub_str = strtok(NULL, ",");
+        if (NULL == strstr(sub_str, "collider=")) 
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider=\n", i);
             return status;
         }
         //collider x
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == sous_chaine)
+        sub_str = strtok(NULL, ",");
+        if (NULL == sub_str)
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider.x=[???]\n", i);
             return status;
         }
-        (*objs)[i].collider.x = TILE_SIZE * getNbrFromChars(sous_chaine);
+        (*objs)[i].collider.x = TILE_SIZE * atoi(sub_str);
         //collider y
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == sous_chaine)
+        sub_str = strtok(NULL, ",");
+        if (NULL == sub_str)
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider.y=[???]\n", i);
             return status;
         }
-        (*objs)[i].collider.y = TILE_SIZE * getNbrFromChars(sous_chaine);
+        (*objs)[i].collider.y = TILE_SIZE * atoi(sub_str);
         //collider w
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == sous_chaine)
+        sub_str = strtok(NULL, ",");
+        if (NULL == sub_str)
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider.w=[???]\n", i);
             return status;
         }
-        (*objs)[i].collider.w = TILE_SIZE * getNbrFromChars(sous_chaine);
+        (*objs)[i].collider.w = TILE_SIZE * atoi(sub_str);
         //collider h
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == sous_chaine)
+        sub_str = strtok(NULL, ",");
+        if (NULL == sub_str)
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider.h=[???]\n", i);
             return status;
         }
-        (*objs)[i].collider.h = TILE_SIZE * getNbrFromChars(sous_chaine);
+        (*objs)[i].collider.h = TILE_SIZE * atoi(sub_str);
         
         //==============
         //life=
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == strstr(sous_chaine, "life=")) 
+        sub_str = strtok(NULL, ",");
+        if (NULL == strstr(sub_str, "life=")) 
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : life=\n", i);
             return status;
         }
         //value
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == sous_chaine)
+        sub_str = strtok(NULL, ",");
+        if (NULL == sub_str)
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : life=[???]\n", i);
             return status;
         }
-        if (NULL != strstr(sous_chaine, "inf")) 
+        if (NULL != strstr(sub_str, "inf")) 
             (*objs)[i].life = -1;
         else
-            (*objs)[i].life = getNbrFromChars(sous_chaine);
+            (*objs)[i].life = atoi(sub_str);
             
         //==============
         //direction=
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == strstr(sous_chaine, "dir=")) 
+        sub_str = strtok(NULL, ",");
+        if (NULL == strstr(sub_str, "dir=")) 
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : dir=\n", i);
             return status;
         }
         //value
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == sous_chaine)
+        sub_str = strtok(NULL, ",");
+        if (NULL == sub_str)
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : dir=[???]\n", i);
             return status;
         }
-        (*objs)[i].direction = getNbrFromChars(sous_chaine);
+        (*objs)[i].direction = atoi(sub_str);
             
             
         //==============
         //enabled=
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == strstr(sous_chaine, "enabled=")) 
+        sub_str = strtok(NULL, ",");
+        if (NULL == strstr(sub_str, "enabled=")) 
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : enabled=\n", i);
             return status;
         }
         //value
-        sous_chaine = strtok(NULL, ",");
-        if (NULL == sous_chaine)
+        sub_str = strtok(NULL, ",");
+        if (NULL == sub_str)
         {
             fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : enabled=[???]\n", i);
             return status;
         }
-        if (NULL != strstr(sous_chaine, "1")) 
+        if (NULL != strstr(sub_str, "1")) 
             (*objs)[i].enabled = true;
         else
             (*objs)[i].enabled = false;
@@ -315,15 +305,15 @@ int objReading(FILE *level_file, char *buf, size_t buf_len, interobj **objs, siz
         fprintf(stderr, "Fichier corrompu (interobjects=).\n");
         return status;
     }
-    char *sous_chaine;
-    sous_chaine = strtok(buf, ",");
-    sous_chaine = strtok(NULL, ",");    
-    if(NULL == sous_chaine)
+    char *sub_str;
+    sub_str = strtok(buf, ",");
+    sub_str = strtok(NULL, ",");    
+    if(NULL == sub_str)
     {
         fprintf(stderr, "Fichier corrompu ( interobjects=[aucune valeur] ).\n");
         return status;
     }
-    *nb_objs = getNbrFromChars(sous_chaine);
+    *nb_objs = atoi(sub_str);
     if(*nb_objs != 0)
     {
         //Réallocation du tableau objs maintenant que l'on connait le nombre d'interobjects
@@ -346,14 +336,14 @@ int objReading(FILE *level_file, char *buf, size_t buf_len, interobj **objs, siz
         fprintf(stderr, "Fichier corrompu (npcs=).\n");
         return status;
     }
-    sous_chaine = strtok(buf, ",");
-    sous_chaine = strtok(NULL, ",");    
-    if(NULL == sous_chaine)
+    sub_str = strtok(buf, ",");
+    sub_str = strtok(NULL, ",");    
+    if(NULL == sub_str)
     {
         fprintf(stderr, "Fichier corrompu ( npcs=[aucune valeur] ).\n");
         return status;
     }
-    *nb_npcs = getNbrFromChars(sous_chaine);
+    *nb_npcs = atoi(sub_str);
     
     //arrête la fonction ici si il n'y a pas de npcs
     if(*nb_npcs == 0)
@@ -380,6 +370,7 @@ int objReading(FILE *level_file, char *buf, size_t buf_len, interobj **objs, siz
     }
     for(int i=0; i<(*nb_npcs); i++)
     {
+        //(*npcs)[i].obj.ID = npc_objs_tmp[i].ID;
         (*npcs)[i].obj.type = npc_objs_tmp[i].type;
         
         (*npcs)[i].obj.position.x = npc_objs_tmp[i].position.x;
@@ -466,28 +457,28 @@ int loadLevel(const char* level_filename, game_context *gctx)
     
     //reallocation dynamique du tableau de numéro des tuiles
     //maintenant que l'on connait sa taille
-    int *tmp = realloc( gctx->main_tiles_grid, sizeof( int[gctx->nbTiles_y][gctx->nbTiles_x] ) );
+    int *tmp = realloc( gctx->main_tiles_array, sizeof( int[gctx->nbTiles_y][gctx->nbTiles_x] ) );
     if (NULL == tmp)
     {
-        fprintf(stderr, "erreur realloc gctx->main_tiles_grid in fct loadLevel\n");
+        fprintf(stderr, "erreur realloc gctx->main_tiles_array in fct loadLevel\n");
         goto Cleanup_all;
     }
-    gctx->main_tiles_grid = tmp;
+    gctx->main_tiles_array = tmp;
     
-    tmp = realloc( gctx->overlay_tiles_grid, sizeof( int[gctx->nbTiles_y][gctx->nbTiles_x] ) );
+    tmp = realloc( gctx->overlay_tiles_array, sizeof( int[gctx->nbTiles_y][gctx->nbTiles_x] ) );
     if (NULL == tmp)
     {
-        fprintf(stderr, "erreur realloc gctx->overlay_tiles_grid in fct loadLevel\n");
+        fprintf(stderr, "erreur realloc gctx->overlay_tiles_array in fct loadLevel\n");
         goto Cleanup_all;
     }
-    gctx->overlay_tiles_grid = tmp;
+    gctx->overlay_tiles_array = tmp;
     
     //init a 0
-    memset(gctx->main_tiles_grid, 0, sizeof( int[gctx->nbTiles_y][gctx->nbTiles_x] ) );
-    memset(gctx->overlay_tiles_grid, 0, sizeof( int[gctx->nbTiles_y][gctx->nbTiles_x] ) );
+    memset(gctx->main_tiles_array, 0, sizeof( int[gctx->nbTiles_y][gctx->nbTiles_x] ) );
+    memset(gctx->overlay_tiles_array, 0, sizeof( int[gctx->nbTiles_y][gctx->nbTiles_x] ) );
     
-    //lecture des tuiles du décor et remplissage du tableau main_tiles_grid
-    tilesReading(gctx->nbTiles_x, gctx->nbTiles_y, level_file, buf, buf_len, &gctx->main_tiles_grid);
+    //lecture des tuiles du décor et remplissage du tableau main_tiles_array
+    tilesReading(gctx->nbTiles_x, gctx->nbTiles_y, level_file, buf, buf_len, &gctx->main_tiles_array);
     
     //ligne end_main_grid
     lireLigne(level_file, buf, buf_len);
@@ -505,8 +496,8 @@ int loadLevel(const char* level_filename, game_context *gctx)
         goto Cleanup_all;
     }
     
-    //lecture des tuiles du décor et remplissage du tableau overlay_tiles_grid
-    tilesReading(gctx->nbTiles_x, gctx->nbTiles_y, level_file, buf, buf_len, &gctx->overlay_tiles_grid);
+    //lecture des tuiles du décor et remplissage du tableau overlay_tiles_array
+    tilesReading(gctx->nbTiles_x, gctx->nbTiles_y, level_file, buf, buf_len, &gctx->overlay_tiles_array);
     
     //ligne end_overlay_grid
     lireLigne(level_file, buf, buf_len);

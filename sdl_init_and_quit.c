@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_mixer.h>
+#include <SDL_ttf.h>
 
 #include "enumerations.h"
+#include "sdl_init_and_quit.h"
 
 int initSDL(SDL_Renderer **renderer, SDL_Window **window)
 {

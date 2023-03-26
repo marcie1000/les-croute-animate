@@ -22,5 +22,8 @@ extern int chinit(game_context *gctx, const character *ch, script_states *st);
 extern int search_ch(game_context *gctx, const char *name, size_t *id);
 extern int chdestroy(game_context *gctx, const char *name, script_states *st);
 extern void chwalk(game_context *gctx, const char* name, SDL_Point dest, script_states *st);
+extern void player_block_input(game_context *gctx, bool flag, script_states *st);
+extern void draw_black_stripes(game_context *gctx, bool in_out, script_states *st);
+extern void toggle_script(gameLevel *level, unsigned level_ID, bool flag, script_states *st);
 
 #endif //SCRIPT_ENGINE_H

@@ -2,18 +2,22 @@
 <CodeLite_Project Name="animate" Version="11000" InternalType="User templates">
   <VirtualDirectory Name="animate">
     <VirtualDirectory Name="sources">
+      <File Name="mainloop.c"/>
+      <File Name="switch_events.c"/>
       <File Name="game_scripts.c"/>
       <File Name="script_engine.c"/>
       <File Name="collisions.c"/>
       <File Name="anim.c"/>
       <File Name="npc.c"/>
       <File Name="audio.c"/>
-      <File Name="fx_switch_events.c"/>
       <File Name="sdl_init_and_quit.c"/>
       <File Name="textures_fx.c"/>
       <File Name="fichiers.c"/>
     </VirtualDirectory>
     <VirtualDirectory Name="headers">
+      <File Name="mainloop.h"/>
+      <File Name="sdl_init_and_quit.h"/>
+      <File Name="switch_events.h"/>
       <File Name="game_scripts.h"/>
       <File Name="script_engine.h"/>
       <File Name="collisions.h"/>
@@ -31,6 +35,8 @@
   <VirtualDirectory Name="src">
     <File Name="main.c"/>
   </VirtualDirectory>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="" C_Options="-std=c17" Assembler="">
@@ -42,7 +48,10 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="clang-15" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-gdwarf-2;-O0;-Wall" C_Options="-O0;-gdwarf-2;-pedantic;-std=c17;-Wall;-fno-common; -fno-builtin" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="1"/>
+      <Compiler Options="-gdwarf-2;-O0;-Wall" C_Options="-O0;-gdwarf-2;-pedantic;-std=c17;-Wall;-fno-common;-fno-builtin;-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="1">
+        <IncludePath Value="."/>
+        <IncludePath Value="/usr/include/SDL2"/>
+      </Compiler>
       <Linker Options="" Required="yes">
         <Library Value="SDL2"/>
         <Library Value="SDL2_ttf"/>
@@ -125,6 +134,4 @@
       </Completion>
     </Configuration>
   </Settings>
-  <Dependencies Name="Debug"/>
-  <Dependencies Name="Release"/>
 </CodeLite_Project>

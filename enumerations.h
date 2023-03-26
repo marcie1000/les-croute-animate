@@ -1,7 +1,7 @@
 #ifndef ENUMERATIONS_H
 #define ENUMERATIONS_H
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 enum window_parameters { 
     SPRITE_SIZE = 16, 
@@ -44,26 +44,7 @@ enum player_requests {
     REQ_JUMP
 };
 
-enum player_sprites {
-    PL_SPRITE_DAN_BACK_STAND,
-    PL_SPRITE_DAN_BACK_WALK,
-    PL_SPRITE_ANT_BACK_STAND,
-    PL_SPRITE_ANT_BACK_WALK,
-    PL_SPRITE_DAN_FACE_STAND,
-    PL_SPRITE_DAN_FACE_WALK,
-    PL_SPRITE_ANT_FACE_STAND,
-    PL_SPRITE_ANT_FACE_WALK,
-    PL_SPRITE_DAN_SIDE_STAND,
-    PL_SPRITE_DAN_SIDE_WALK,
-    PL_SPRITE_ANT_SIDE_STAND,
-    PL_SPRITE_ANT_SIDE_WALK
-};
-
 enum touches_keymap {
-    /*TOUCHE_AR_LEFT = SDLK_LEFT,
-    TOUCHE_AR_RIGHT = SDLK_RIGHT,
-    TOUCHE_AR_UP = SDLK_UP,
-    TOUCHE_AR_DOWN = SDLK_DOWN,*/
     
     TOUCHE_LEFT = SDL_SCANCODE_A,
     TOUCHE_RIGHT = SDL_SCANCODE_D,
@@ -73,18 +54,14 @@ enum touches_keymap {
     TOUCHE_JUMP = SDL_SCANCODE_SPACE
 };
 
-//enum character_type {
-//
-//};
 
 enum interobj_types {
     BODY_TYPE_DANIEL,
     BODY_TYPE_ANTOINE,
     NPC_SANGLIER,
     IT_NONE,
-    IT_ENDWALL,
     IT_WALL,
-    IT_COIN
+    IT_TRIGGER
 };
 
 enum items_tiles {
@@ -107,12 +84,13 @@ enum script_functions_returns {
 #define SP_AC_NPC_HURT      (1U << 3)
 
 //CHARACTER STATES
-#define CH_STATE_NONE       (0U     )
-#define CH_STATE_WALKING    (1U << 0)
-#define CH_STATE_FALLING    (1U << 1)
-#define CH_STATE_JUMPING    (1U << 2)
-#define CH_STATE_HURT       (1U << 3)
-#define CH_STATE_MOVED      (1U << 4)
+#define CH_STATE_NONE           (0U     )
+#define CH_STATE_WALKING        (1U << 0)
+#define CH_STATE_FALLING        (1U << 1)
+#define CH_STATE_JUMPING        (1U << 2)
+#define CH_STATE_HURT           (1U << 3)
+#define CH_STATE_MOVED          (1U << 4)
+#define CH_STATE_BLOCK_INPUT    (1U << 5)
 
 extern const char ANTOINE_SPRITES_PNG[];
 extern const char DANIEL_SPRITES_PNG[];

@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_mixer.h>
+#include <SDL_ttf.h>
 
 #include "enumerations.h"
 #include "textures_fx.h"
@@ -23,18 +23,6 @@ bool checkScriptState(script_states *st)
     st->incs++;
     return test;
 }
-
-//void timerInit (gTimer *timer, script_states *st)
-//{
-//    //execute the function or not
-//    if(!checkScriptState(st))
-//        return;
-//    
-//    timer->init_t = SDL_GetTicks64();
-//    //increment current state
-//    st->curs++;
-//    st->first_call = true;
-//}
 
 void timerWait (gTimer *timer, int wait_time, script_states *st)
 {
@@ -82,7 +70,7 @@ void scriptDialog (game_context *gctx, wchar_t *wstr, int speed, script_states *
     }
 }
 
-void scriptDialogClear (game_context *gctx, script_states *st)
+void scriptDialogClear(game_context *gctx, script_states *st)
 {
     //execute the function or not
     if(!checkScriptState(st))
@@ -258,8 +246,69 @@ void chwalk(game_context *gctx, const char* name, SDL_Point dest, script_states 
     {
         //stop walking
         gctx->scpt_npcs[ch_ID].state &= ~(CH_STATE_WALKING); //walking false
+        //increment current state
         st->curs++;
         st->first_call = true;
     }
     
 }
+
+void player_block_input(game_context *gctx, bool flag, script_states *st)
+{
+    //execute the function or not
+    if(!checkScriptState(st))
+        return;
+    
+    flag_assign(&gctx->player.state, CH_STATE_BLOCK_INPUT, flag);
+    
+    //increment current state
+    st->curs++;
+    st->first_call = true;
+}
+
+void draw_black_stripes(game_context *gctx, bool in_out, script_states *st)
+{
+    //execute the function or not
+    if(!checkScriptState(st))
+        return;
+    
+    static int anim_value;
+    if(st->first_call)
+        anim_value = in_out * 4 * TILE_SIZE;
+
+//    if(!in_out)
+//        anim_value++;
+//    else
+//        anim_value--;
+    st->first_call = false;
+        
+    anim_value += !in_out ? 1 : -1;
+        
+
+    
+    black_stripes(gctx, anim_value/2);
+    
+    bool end = ((!in_out && anim_value == 4*TILE_SIZE) ||
+                (in_out && anim_value == 0)) ? true : false;
+    
+    if(end)
+    {
+        //increment current state
+        st->curs++;
+        st->first_call = true;
+    }
+}
+
+void toggle_script(gameLevel *level, unsigned level_ID, bool flag, script_states *st)
+{
+    //execute the function or not
+    if(!checkScriptState(st))
+        return;
+    
+    flag_assign(&level->active_scripts, level_ID, flag);
+    
+    //increment current state
+    st->curs++;
+    st->first_call = true;
+}
+

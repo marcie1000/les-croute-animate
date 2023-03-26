@@ -3,9 +3,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <wchar.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
 
 #include "textures_fx.h"
 #include "enumerations.h"
@@ -72,7 +72,16 @@ int initTextures(game_context *gctx)
         return EXIT_FAILURE;
     }
     SDL_SetTextureBlendMode(gctx->hud, SDL_BLENDMODE_BLEND);
-
+    
+    gctx->stripes_texture = SDL_CreateTexture(gctx->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET,
+                                              NB_TILES_X * TILE_SIZE, NB_TILES_Y * TILE_SIZE);
+    if(NULL == gctx->stripes_texture)
+    {
+        fprintf(stderr, "error SDL_CreateTexture stripes_texture in function initTextures : %s\n", SDL_GetError());
+        return EXIT_FAILURE;
+    }
+    SDL_SetTextureBlendMode(gctx->stripes_texture, SDL_BLENDMODE_BLEND);
+    
     gctx->text_dialog = SDL_CreateTexture(gctx->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET,
                                           NB_TILES_X * TILE_SIZE, NB_TILES_Y * TILE_SIZE);
     if(NULL == gctx->text_dialog)
@@ -106,6 +115,8 @@ void destroyTextures(game_context *gctx)
         SDL_DestroyTexture(gctx->hud);
     if(NULL != gctx->text_dialog)
         SDL_DestroyTexture(gctx->text_dialog);
+    if(NULL != gctx->stripes_texture)
+        SDL_DestroyTexture(gctx->stripes_texture);
     
 //    status = EXIT_SUCCESS;
 //    return status;
@@ -195,61 +206,60 @@ int initLevelTextures(SDL_Texture **level_main, SDL_Renderer *renderer, int nbt_
 }
 
 
-int HUD_update(SDL_Renderer *renderer, SDL_Texture **hud, SDL_Texture *assets_tiles,
-               int ts_nb_x, int ts_nb_y, character player)
+int HUD_update(game_context *gctx)
 {
     static int money;
     static int life;
     bool changes = true;
     
-    if(money != player.money)
+    if(money != gctx->player.money)
     {
         changes = true;
-        money = player.money;
+        money = gctx->player.money;
     }
-    else if(life != player.obj.life)
+    else if(life != gctx->player.obj.life)
     {
         changes = true;
-        life = player.obj.life;
+        life = gctx->player.obj.life;
     }
     else 
         changes = false;
     
     if(changes)
     {
-        SDL_SetRenderTarget(renderer, *hud);
-        SDL_SetRenderDrawColor(renderer, 0,0,0,0);
-        SDL_RenderClear(renderer);
+        SDL_SetRenderTarget(gctx->renderer, gctx->hud);
+        SDL_SetRenderDrawColor(gctx->renderer, 0,0,0,0);
+        SDL_RenderClear(gctx->renderer);
         
         int posX = 1; 
         
         //money
         SDL_Rect src;
-        selectLvlAssetsTile(ITEM_COIN, &src, ts_nb_x, ts_nb_y);
-        copieTextureSurRender(renderer, assets_tiles, posX, 2, src, SDL_FLIP_NONE, 1);
+        selectLvlAssetsTile(ITEM_COIN, &src, gctx->tsnb_x, gctx->tsnb_y);
+        copieTextureSurRender(gctx->renderer, gctx->assets_tiles, posX, 2, src, SDL_FLIP_NONE, 1);
         //money amount text
         char buf[50];
-        sprintf(buf, "%d", player.money);
-        SDL_Texture *tmp = createText(hud_tf, buf, renderer, 200);
+        sprintf(buf, "%d", gctx->player.money);
+        SDL_Texture *tmp = createText(hud_tf, buf, gctx->renderer, 200);
         if(NULL == tmp)
             return EXIT_FAILURE;
         posX += 3+TILE_SIZE;
-        copieTextureSurRender(renderer, tmp, posX, -1, RECT_NULL, SDL_FLIP_NONE, 1);
+        copieTextureSurRender(gctx->renderer, tmp, posX, -1, RECT_NULL, SDL_FLIP_NONE, 1);
         SDL_DestroyTexture(tmp);
         
         //life
         posX += 2*TILE_SIZE;
         for(int i = 1; i<=PLAYER_MAX_LIFE; i++)
         {
-            if(player.obj.life >= i)
-                selectLvlAssetsTile(ITEM_HEART, &src, ts_nb_x, ts_nb_y);
+            if(gctx->player.obj.life >= i)
+                selectLvlAssetsTile(ITEM_HEART, &src, gctx->tsnb_x, gctx->tsnb_y);
             else
-                selectLvlAssetsTile(ITEM_EMPTY_HEART, &src, ts_nb_x, ts_nb_y);
-            copieTextureSurRender(renderer, assets_tiles, posX, 2, src, SDL_FLIP_NONE, 1);
+                selectLvlAssetsTile(ITEM_EMPTY_HEART, &src, gctx->tsnb_x, gctx->tsnb_y);
+            copieTextureSurRender(gctx->renderer, gctx->assets_tiles, posX, 2, src, SDL_FLIP_NONE, 1);
             posX += TILE_SIZE + 1;
         }
         
-        SDL_SetRenderTarget(renderer, NULL);
+        SDL_SetRenderTarget(gctx->renderer, NULL);
     }
     
     return 0;
@@ -524,3 +534,33 @@ int loadNPCSprite(game_context *gctx, character npc,
     return status;
 }
 
+void black_stripes(game_context *gctx, int anim_value)
+{
+    SDL_SetRenderTarget(gctx->renderer, gctx->stripes_texture);
+    SDL_SetRenderDrawColor(gctx->renderer, 0,0,0,0);
+    SDL_RenderClear(gctx->renderer);
+    SDL_SetRenderDrawColor(gctx->renderer, 0,0,0,255);
+    SDL_Rect dst = {
+        0,
+        0,
+        TILE_SIZE * NB_TILES_X,
+        anim_value
+    };
+    SDL_RenderFillRect(gctx->renderer, &dst);
+    dst.y = TILE_SIZE * NB_TILES_Y - anim_value;
+    SDL_RenderFillRect(gctx->renderer, &dst);
+    SDL_SetRenderTarget(gctx->renderer, NULL);
+}
+//
+//void renderAll(game_context *gctx)
+//{
+//    //RENDER
+//    //render level
+//    SDL_SetRenderTarget(gctx->renderer, NULL);
+//    copieTextureSurRender(gctx->renderer, gctx->level_main_layer, 0, 0, gctx->cam.texLoadSrc, SDL_FLIP_NONE, WIN_SCALE);
+//    copieTextureSurRender(gctx->renderer, gctx->level_overlay, 0, 0, gctx->cam.texLoadSrc, SDL_FLIP_NONE, WIN_SCALE);
+//    //HUD
+//    copieTextureSurRender(gctx->renderer, gctx->hud, 0, 0, RECT_NULL, SDL_FLIP_NONE, WIN_SCALE);
+//    copieTextureSurRender(gctx->renderer, gctx->stripes_texture, 0,0, RECT_NULL, SDL_FLIP_NONE, WIN_SCALE);
+//    copieTextureSurRender(gctx->renderer, gctx->text_dialog, 0, 0, RECT_NULL, SDL_FLIP_NONE, WIN_SCALE);
+//}

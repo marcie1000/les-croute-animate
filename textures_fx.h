@@ -1,7 +1,7 @@
 #ifndef TEXTURES_FX_H
 #define TEXTURES_FX_H
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <stdbool.h>
 #include "types_struct_defs.h"
 
@@ -11,8 +11,8 @@ typedef struct text_format {
     SDL_Color color;
 }text_format;
 
-extern int initTextures(game_context *ctx);
-extern void destroyTextures(game_context *ctx);
+extern int initTextures(game_context *gctx);
+extern void destroyTextures(game_context *gctx);
 extern int copieTextureSurRender(SDL_Renderer *renderer, SDL_Texture *texture,
                                  int pos_x, int pos_y, SDL_Rect source, 
                                  SDL_RendererFlip flip, int scale);
@@ -27,11 +27,11 @@ extern int initLevelTextures(SDL_Texture **level_main, SDL_Renderer *renderer,
 extern int choseNPCSprite(character npc, SDL_RendererFlip *flip);
 extern int loadNPCSprite(game_context *gctx, character npc,
                          int pos_x, int pos_y, int sprite_ID, SDL_RendererFlip flip);
-extern int HUD_update(SDL_Renderer *renderer, SDL_Texture **hud, SDL_Texture *assets_tiles,
-                      int ts_nb_x, int ts_nb_y, character player);
+extern int HUD_update(game_context *gctx);
 extern SDL_Texture *createText(text_format tf, const char *string, SDL_Renderer *ren, Uint32 wrap);
 extern int textDialogUpdate(game_context *gctx, wchar_t *wstr, int speed);
 extern void textDialogClear(game_context *gctx);
+extern void black_stripes(game_context *gctx, int anim_values);
 
 
 

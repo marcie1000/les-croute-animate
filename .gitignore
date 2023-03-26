@@ -1,1 +1,6 @@
 animate.mk
+.clang-format
+.clangd
+webbuild-custom.sh
+page/
+build/

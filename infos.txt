@@ -6,7 +6,5 @@ https://rafagars.itch.io/gbgbc-assets
 https://benjaminno.itch.io/sweet-sounds-sfx-pack
 https://managore.itch.io/m5x7
 
-
-
-todo :
-- mettre en place une vérification de si le collider est "wall" dans les fonctions où ce n'est pas encore le cas
+SDL2 cmake modules :
+https://github.com/aminosbh/sdl2-cmake-modules

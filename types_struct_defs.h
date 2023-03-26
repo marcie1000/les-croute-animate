@@ -1,8 +1,8 @@
 #ifndef TYPES_STRUCT_DEFS_H
 #define TYPES_STRUCT_DEFS_H
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
+#include <SDL.h>
+#include <SDL_mixer.h>
 #include "enumerations.h"
 
 typedef struct flpoint {
@@ -11,6 +11,7 @@ typedef struct flpoint {
 } flpoint;
 
 typedef struct interobj { //objets pouvant interragir avec le joueur
+    //int ID;
     int type;
     flpoint position;
     SDL_Rect collider;
@@ -42,6 +43,16 @@ typedef struct gTimer {
     Uint64 current_t; //current time
 } gTimer;
 
+typedef struct gameLevel {
+    int ID;
+    const char *filename;
+    int nb_triggers;
+    int nb_scripts;
+    unsigned script_link[10]; 
+    //eg. : script_link[0] = 1  ->   object n°0 which is a trigger links to the script n°1
+    unsigned active_scripts;
+} gameLevel;
+
 typedef struct game_context {
     SDL_Window *main_window;
     SDL_Renderer *renderer;
@@ -56,6 +67,7 @@ typedef struct game_context {
     SDL_Texture *level_overlay;
     SDL_Texture *hud;
     SDL_Texture *text_dialog;
+    SDL_Texture *stripes_texture;
     
     //sounds
     Mix_Chunk *jump;
@@ -79,8 +91,11 @@ typedef struct game_context {
     size_t nb_objs;
     size_t nb_npcs;
     size_t nb_scpt_npcs;
-    int *main_tiles_grid;
-    int *overlay_tiles_grid;
+    int *main_tiles_array;
+    int *overlay_tiles_array;
+    
+    gameLevel *levels;
+    int nb_levels;
     
     //events
     SDL_Event e;
@@ -95,6 +110,8 @@ typedef struct game_context {
     
     //camera
     int cam_leftRight;
+    
+    bool mainloop_quit;
 } game_context;
 
 //typedef struct level {

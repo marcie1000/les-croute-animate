@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #include "collisions.h"
 #include "enumerations.h"
@@ -14,8 +14,8 @@ void flag_assign(unsigned *var, unsigned flag, bool condition)
     *var = condition ? *var | flag : *var & ~flag;
 }
 
-void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *main_tiles_grid, 
-              int nb_tuiles_x, int nb_tuiles_y, bool *hurt_soundflag, bool *bump_soundflag)
+void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *main_tiles_array, 
+              int *overlay_tiles_array, int nb_tuiles_x, int nb_tuiles_y, bool *hurt_soundflag, bool *bump_soundflag)
 {
     *bump_soundflag = false;
     //ACTUALISATIONS POSITION NPCS ==============================
@@ -31,7 +31,7 @@ void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *ma
                 &npcs[i].state,
                 CH_STATE_JUMPING,
                 updatePositionJump(nb_objs, objs, &npcs[i], npcs[i].frame_jump, hurt_soundflag,
-                                   main_tiles_grid, nb_tuiles_x, nb_tuiles_y)
+                                   main_tiles_array, overlay_tiles_array, nb_tuiles_x, nb_tuiles_y)
             );
             //next frame jump
             npcs[i].frame_jump++;
@@ -42,7 +42,7 @@ void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *ma
                 &npcs[i].state,
                 CH_STATE_FALLING,
                 CharacterFall(nb_objs, objs, &npcs[i],
-                           main_tiles_grid, nb_tuiles_x, nb_tuiles_y)
+                              main_tiles_array, overlay_tiles_array, nb_tuiles_x, nb_tuiles_y)
             );
             if(npcs[i].state & CH_STATE_FALLING)
             {
@@ -64,7 +64,7 @@ void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *ma
                 &npcs[i].state,
                 CH_STATE_MOVED,
                 updatePositionWalk(nb_objs, objs, &npcs[i], 0, npc_left_right,
-                                   main_tiles_grid, nb_tuiles_x, nb_tuiles_y/*, false*/)
+                                   main_tiles_array, overlay_tiles_array, nb_tuiles_x, nb_tuiles_y/*, false*/)
             );
             //go to next npcs[i].frame_walk
             npcs[i].frame_walk++;
@@ -95,8 +95,8 @@ void anim_main_character(game_context *gctx)
         flag_assign(
             &gctx->player.state,
             CH_STATE_FALLING,
-            CharacterFall(gctx->nb_objs, gctx->objs, &gctx->player, gctx->main_tiles_grid, 
-                          gctx->nbTiles_x, gctx->nbTiles_y)
+            CharacterFall(gctx->nb_objs, gctx->objs, &gctx->player, gctx->main_tiles_array, 
+                          gctx->overlay_tiles_array, gctx->nbTiles_x, gctx->nbTiles_y)
         );
 
         if(gctx->player.state & CH_STATE_FALLING) 
@@ -117,7 +117,7 @@ void anim_main_character(game_context *gctx)
             CH_STATE_JUMPING,
             //change la position du personnage et renvoie true jusqu'à la fin du saut
             updatePositionJump(gctx->nb_objs, gctx->objs, &gctx->player, gctx->player.frame_jump, &gctx->hurt_soundflag,
-                               gctx->main_tiles_grid, gctx->nbTiles_x, gctx->nbTiles_y)
+                               gctx->main_tiles_array, gctx->overlay_tiles_array, gctx->nbTiles_x, gctx->nbTiles_y)
         );
         //next frame jump
         gctx->player.frame_jump++;
@@ -135,7 +135,7 @@ void anim_main_character(game_context *gctx)
             &gctx->player.state,
             CH_STATE_MOVED,
             updatePositionWalk(gctx->nb_objs, gctx->objs, &gctx->player, gctx->up_down, gctx->left_right, 
-                               gctx->main_tiles_grid, gctx->nbTiles_x, gctx->nbTiles_y/*, renderer, debug*/)
+                               gctx->main_tiles_array, gctx->overlay_tiles_array, gctx->nbTiles_x, gctx->nbTiles_y/*, renderer, debug*/)
         );                                  
         
         gctx->player.obj.collider.x = gctx->player.obj.position.x + PLAYER_COL_SHIFT;
@@ -171,8 +171,8 @@ void anim_scripted_npc(game_context *gctx, character *ch)
         flag_assign(
             &ch->state,
             CH_STATE_FALLING,
-            CharacterFall(gctx->nb_objs, gctx->objs, ch, gctx->main_tiles_grid, 
-                          gctx->nbTiles_x, gctx->nbTiles_y)
+            CharacterFall(gctx->nb_objs, gctx->objs, ch, gctx->main_tiles_array, 
+                          gctx->overlay_tiles_array, gctx->nbTiles_x, gctx->nbTiles_y)
         );
 
         if(ch->state & CH_STATE_FALLING) 
@@ -193,7 +193,7 @@ void anim_scripted_npc(game_context *gctx, character *ch)
             CH_STATE_JUMPING,
             //change la position du personnage et renvoie true jusqu'à la fin du saut
             updatePositionJump(gctx->nb_objs, gctx->objs, ch, ch->frame_jump, &gctx->hurt_soundflag,
-                               gctx->main_tiles_grid, gctx->nbTiles_x, gctx->nbTiles_y)
+                               gctx->main_tiles_array, gctx->overlay_tiles_array, gctx->nbTiles_x, gctx->nbTiles_y)
         );
         //next frame jump
         ch->frame_jump++;
@@ -218,7 +218,7 @@ void anim_scripted_npc(game_context *gctx, character *ch)
             &ch->state,
             CH_STATE_MOVED,
             updatePositionWalk(gctx->nb_objs, gctx->objs, ch, 0, left_right, 
-                               gctx->main_tiles_grid, gctx->nbTiles_x, gctx->nbTiles_y/*, renderer, debug*/)
+                               gctx->main_tiles_array, gctx->overlay_tiles_array, gctx->nbTiles_x, gctx->nbTiles_y/*, renderer, debug*/)
         );                                  
         
         ch->obj.collider.x = ch->obj.position.x + PLAYER_COL_SHIFT;
