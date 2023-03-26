@@ -1,6 +1,6 @@
 # les-croute-animate
 
-2D platformer game in C and SDL2.
+2D platformer game in C and SDL2. Play in the browser [here](https://marcie1000.github.io/les-croute-animate/animate.html)!
 
 ## How to build:
 
