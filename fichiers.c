@@ -107,12 +107,12 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
     char* sub_str;
     //============================================
     //boucle de remplissage du tableau objs
-    for(int i=0; i<(nb_objs); i++)
+    for(size_t i=0; i<(nb_objs); i++)
     {
         lireLigne(level_file, buf, buf_len);
         if(NULL == buf)
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu\n", i);
             return status;
         }
         //==============
@@ -120,7 +120,7 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         sub_str = strtok(buf, ",");
         if (NULL == strstr(sub_str, "*")) 
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : *\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : *\n", i);
             return status;
         }
         
@@ -130,14 +130,14 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
 //        sub_str = strtok(NULL, ",");
 //        if (NULL == strstr(sub_str, "ID=")) 
 //        {
-//            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : ID=\n", i);
+//            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : ID=\n", i);
 //            return status;
 //        }
 //        //value
 //        sub_str = strtok(NULL, ",");
 //        if (NULL == sub_str)
 //        {
-//            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : ID=[???]\n", i);
+//            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : ID=[???]\n", i);
 //            return status;
 //        }
 //        (*objs)[i].ID = atoi(sub_str);
@@ -147,7 +147,7 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         sub_str = strtok(NULL, ",");
         if (NULL == strstr(sub_str, "type=")) 
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : type=\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : type=\n", i);
             return status;
         }
         sub_str = strtok(NULL, ",");
@@ -168,14 +168,14 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         sub_str = strtok(NULL, ",");
         if (NULL == strstr(sub_str, "position=")) 
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : position=\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : position=\n", i);
             return status;
         }
         //position x
         sub_str = strtok(NULL, ",");
         if (NULL == sub_str)
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : position.x=[???]\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : position.x=[???]\n", i);
             return status;
         }
         (*objs)[i].position.x = atoi(sub_str);
@@ -183,7 +183,7 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         sub_str = strtok(NULL, ",");
         if (NULL == sub_str)
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : position.y=[???]\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : position.y=[???]\n", i);
             return status;
         }
         (*objs)[i].position.y = atoi(sub_str);
@@ -194,14 +194,14 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         sub_str = strtok(NULL, ",");
         if (NULL == strstr(sub_str, "collider=")) 
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider=\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : collider=\n", i);
             return status;
         }
         //collider x
         sub_str = strtok(NULL, ",");
         if (NULL == sub_str)
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider.x=[???]\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : collider.x=[???]\n", i);
             return status;
         }
         (*objs)[i].collider.x = TILE_SIZE * atoi(sub_str);
@@ -209,7 +209,7 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         sub_str = strtok(NULL, ",");
         if (NULL == sub_str)
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider.y=[???]\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : collider.y=[???]\n", i);
             return status;
         }
         (*objs)[i].collider.y = TILE_SIZE * atoi(sub_str);
@@ -217,7 +217,7 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         sub_str = strtok(NULL, ",");
         if (NULL == sub_str)
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider.w=[???]\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : collider.w=[???]\n", i);
             return status;
         }
         (*objs)[i].collider.w = TILE_SIZE * atoi(sub_str);
@@ -225,7 +225,7 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         sub_str = strtok(NULL, ",");
         if (NULL == sub_str)
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : collider.h=[???]\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : collider.h=[???]\n", i);
             return status;
         }
         (*objs)[i].collider.h = TILE_SIZE * atoi(sub_str);
@@ -235,14 +235,14 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         sub_str = strtok(NULL, ",");
         if (NULL == strstr(sub_str, "life=")) 
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : life=\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : life=\n", i);
             return status;
         }
         //value
         sub_str = strtok(NULL, ",");
         if (NULL == sub_str)
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : life=[???]\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : life=[???]\n", i);
             return status;
         }
         if (NULL != strstr(sub_str, "inf")) 
@@ -255,14 +255,14 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         sub_str = strtok(NULL, ",");
         if (NULL == strstr(sub_str, "dir=")) 
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : dir=\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : dir=\n", i);
             return status;
         }
         //value
         sub_str = strtok(NULL, ",");
         if (NULL == sub_str)
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : dir=[???]\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : dir=[???]\n", i);
             return status;
         }
         (*objs)[i].direction = atoi(sub_str);
@@ -273,14 +273,14 @@ int objArrayFill(FILE *level_file, char *buf, size_t buf_len, interobj **objs, s
         sub_str = strtok(NULL, ",");
         if (NULL == strstr(sub_str, "enabled=")) 
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : enabled=\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : enabled=\n", i);
             return status;
         }
         //value
         sub_str = strtok(NULL, ",");
         if (NULL == sub_str)
         {
-            fprintf(stderr, "fichier corrompu : lecture interobject ligne %d : enabled=[???]\n", i);
+            fprintf(stderr, "fichier corrompu : lecture interobject ligne %lu : enabled=[???]\n", i);
             return status;
         }
         if (NULL != strstr(sub_str, "1")) 
@@ -368,7 +368,7 @@ int objReading(FILE *level_file, char *buf, size_t buf_len, interobj **objs, siz
         free(npc_objs_tmp);
         return status;
     }
-    for(int i=0; i<(*nb_npcs); i++)
+    for(size_t i=0; i<(*nb_npcs); i++)
     {
         //(*npcs)[i].obj.ID = npc_objs_tmp[i].ID;
         (*npcs)[i].obj.type = npc_objs_tmp[i].type;

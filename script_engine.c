@@ -15,16 +15,26 @@
 #include "script_engine.h"
 #include "types_struct_defs.h"
 
+/**
+ * @brief Checks if a called function in the script should be executed or not.
+ * Increment incs on every call.
+ * @param st
+ */
 bool checkScriptState(script_states *st)
-//checks if a called function in the script should be executed or not
-//increment incs on every call
+//
 {
     bool test = (st->incs == st->curs);
     st->incs++;
     return test;
 }
 
-void timerWait (gTimer *timer, int wait_time, script_states *st)
+/**
+ * @brief Waits the specified amount of time.
+ * @param timer
+ * @param wait_time
+ * @param st
+ */
+void timerWait (gTimer *timer, Uint64 wait_time, script_states *st)
 {
     //execute the function or not
     if(!checkScriptState(st))

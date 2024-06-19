@@ -300,7 +300,7 @@ int textDialogUpdate(game_context *gctx, wchar_t *wstr, int speed)
     }
 
     txt_timer.current_t = SDL_GetTicks64();
-    while ((txt_timer.current_t - txt_timer.init_t >= speed * showed_len) && 
+    while ((txt_timer.current_t - txt_timer.init_t >= (Uint64)speed * (Uint64)showed_len) && 
            (showed_len < len))
     {
         //wide characters

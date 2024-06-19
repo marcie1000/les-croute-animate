@@ -394,7 +394,7 @@ bool updatePositionJump(int nb_objs, interobj *objs, character *ch, int frame_ju
     return true;
 }
 
-bool updatePositionWalk(int nb_objs, interobj *objs, character *ch, int up_down, int left_right, 
+bool updatePositionWalk(int nb_objs, interobj *objs, character *ch, int left_right, 
                         int *main_tiles_array, int *overlay_tiles_array, int nb_tiles_x, int nb_tiles_y/*, SDL_Renderer *renderer, bool debug*/)
 {
     int requete;
@@ -607,7 +607,7 @@ int checkItemCollision(character *ch, int **main_tiles_array, int **overlay_tile
            ( (*main_tiles_array)[subscripts[j]] == 0) ) )
                 continue;
         
-        switch (checkItemInLayer(main_tiles_array, subscripts[j], pl_col, &tilebnd, nb_tiles_x, nb_tiles_y))
+        switch (checkItemInLayer(main_tiles_array, subscripts[j], pl_col, &tilebnd, nb_tiles_x))
         {
             case ITEM_COIN:
                 sp_act |= SP_AC_EARN_COIN;
@@ -619,7 +619,7 @@ int checkItemCollision(character *ch, int **main_tiles_array, int **overlay_tile
                 break;
         }
         
-        switch (checkItemInLayer(overlay_tiles_array, subscripts[j], pl_col, &tilebnd, nb_tiles_x, nb_tiles_y))
+        switch (checkItemInLayer(overlay_tiles_array, subscripts[j], pl_col, &tilebnd, nb_tiles_x))
         {
             case ITEM_COIN:
                 sp_act |= SP_AC_EARN_COIN;
@@ -636,7 +636,7 @@ int checkItemCollision(character *ch, int **main_tiles_array, int **overlay_tile
 }
 
 int checkItemInLayer(int **tiles_grid, int subscript, SDL_Rect pl_col, SDL_Rect *tilebnd,
-                    int nb_tiles_x, int nb_tiles_y)
+                    int nb_tiles_x)
 //checks for item collision in a specific layer
 {
     int tileID = 0;

@@ -65,9 +65,9 @@ enum interobj_types {
 };
 
 enum items_tiles {
-    ITEM_COIN = 123,
-    ITEM_HEART = 134,
-    ITEM_EMPTY_HEART = 124
+    ITEM_COIN = 179,
+    ITEM_HEART = 191,
+    ITEM_EMPTY_HEART = 180
 };
 
 enum script_functions_returns {

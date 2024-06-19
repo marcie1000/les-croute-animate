@@ -29,20 +29,20 @@
 //constantes
 const char ANTOINE_SPRITES_PNG[] = "assets/images/antoine-sprites.png";
 const char DANIEL_SPRITES_PNG[] = "assets/images/daniel-sprites.png";
-const char ASSETS_TILES_PNG[] = "assets/images/assets-tiles.png";
+const char ASSETS_TILES_PNG[] = "assets/images/assets-tiles3.png";
 const char SANGLIER_SPRITES_PNG[] = "assets/images/sanglier-sprites.png";
 const char AUDIO_FILE_JUMP[] = "assets/sounds/Jump.wav";
 const char AUDIO_FILE_HURT[] = "assets/sounds/Hurt.wav";
 const char AUDIO_FILE_BUMP[] = "assets/sounds/Bump.wav";
 const char AUDIO_FILE_COIN[] = "assets/sounds/Coin.wav";
-const char LEVEL_1_FILENAME[] = "assets/levels/niveau1-builder.csv";
+const char LEVEL_1_FILENAME[] = "assets/levels/level.csv";
 const char TTF_FONT_FILENAME[] = "assets/m5x7.ttf";
 const float player_speed = 1;
-const float gravity = 0.35; //default 0.35
-const float jump_init_speed = 5.5; //default 5.5
+const float gravity = 0.25; //default 0.35
+const float jump_init_speed = 4.5; //default 5.5
 const SDL_Rect RECT_NULL = {0,0,0,0};
 
-int main(int argc, char *argv[])
+int main(void)
 {    
     if (setlocale(LC_ALL, "") == NULL)
     {

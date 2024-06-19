@@ -15,7 +15,7 @@ typedef struct script_state {
 
 extern bool checkScriptState(script_states *st);
 //extern void timerInit (gTimer *timer, script_states *st);
-extern void timerWait (gTimer *timer, int wait_time, script_states *st);
+extern void timerWait (gTimer *timer, Uint64 wait_time, script_states *st);
 extern void scriptDialog (game_context *gctx, wchar_t *wstr, int speed, script_states *st);
 extern void scriptDialogClear (game_context *gctx, script_states *st);
 extern int chinit(game_context *gctx, const character *ch, script_states *st);

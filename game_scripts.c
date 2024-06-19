@@ -22,8 +22,8 @@ static const character daniel = {
     "Daniel",
         {
             BODY_TYPE_DANIEL,
-            {134*TILE_SIZE,0*TILE_SIZE},
-            {134*TILE_SIZE,0*TILE_SIZE,SPRITE_SIZE, SPRITE_SIZE},
+            {109*TILE_SIZE,0*TILE_SIZE},
+            {109*TILE_SIZE,0*TILE_SIZE,SPRITE_SIZE, SPRITE_SIZE},
             1,
             REQ_DIR_DOWN,
             true
@@ -60,10 +60,10 @@ void level1_script0(game_context *gctx, gameLevel *level)
     timerWait(&timer0, 1000, &st);
     chinit(gctx, &daniel, &st);
     timerWait(&timer0, 1000, &st);
-    chwalk(gctx, "Daniel", (SDL_Point){133 * TILE_SIZE, 0}, &st);
-    scriptDialog(gctx, L"Daniel : Oh Antoine c'est toi!!!\nAlors ça va mec ?? ", 40, &st);
+    chwalk(gctx, "Daniel", (SDL_Point){101 * TILE_SIZE, 0}, &st);
+    scriptDialog(gctx, L"Daniel : Attention!! Un monstre très dangereux se situe vers là-bas !", 35, &st);
     timerWait(&timer0, 1000, &st);
-    scriptDialog(gctx, L"Daniel : Haha pourquoi tu réponds pas trop bizarre ça bug nn? ^^", 40, &st);
+    scriptDialog(gctx, L"Daniel : Sois prudent...", 35, &st);
     timerWait(&timer0, 1000, &st);
     scriptDialogClear(gctx, &st);
     player_block_input(gctx, false, &st);

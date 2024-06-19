@@ -63,7 +63,7 @@ void anim_npc(int nb_npcs, int nb_objs, character *npcs, interobj *objs, int *ma
             flag_assign(
                 &npcs[i].state,
                 CH_STATE_MOVED,
-                updatePositionWalk(nb_objs, objs, &npcs[i], 0, npc_left_right,
+                updatePositionWalk(nb_objs, objs, &npcs[i], npc_left_right,
                                    main_tiles_array, overlay_tiles_array, nb_tuiles_x, nb_tuiles_y/*, false*/)
             );
             //go to next npcs[i].frame_walk
@@ -134,7 +134,7 @@ void anim_main_character(game_context *gctx)
         flag_assign(
             &gctx->player.state,
             CH_STATE_MOVED,
-            updatePositionWalk(gctx->nb_objs, gctx->objs, &gctx->player, gctx->up_down, gctx->left_right, 
+            updatePositionWalk(gctx->nb_objs, gctx->objs, &gctx->player, gctx->left_right, 
                                gctx->main_tiles_array, gctx->overlay_tiles_array, gctx->nbTiles_x, gctx->nbTiles_y/*, renderer, debug*/)
         );                                  
         
@@ -217,7 +217,7 @@ void anim_scripted_npc(game_context *gctx, character *ch)
         flag_assign(
             &ch->state,
             CH_STATE_MOVED,
-            updatePositionWalk(gctx->nb_objs, gctx->objs, ch, 0, left_right, 
+            updatePositionWalk(gctx->nb_objs, gctx->objs, ch, left_right, 
                                gctx->main_tiles_array, gctx->overlay_tiles_array, gctx->nbTiles_x, gctx->nbTiles_y/*, renderer, debug*/)
         );                                  
         

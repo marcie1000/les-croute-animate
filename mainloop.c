@@ -134,7 +134,7 @@ void loopcode(void *arg)
     //n° of the sprite to be rendered
     int spriteID;
     //affichage des npcs
-    for(int i=0; i<gctx->nb_npcs; i++)
+    for(size_t i=0; i<gctx->nb_npcs; i++)
     {
         if(gctx->npcs[i].obj.enabled)
         {
